@@ -14,10 +14,10 @@ class Client:
         self.__is_connected = True
 
     def send_message(self, msg: str):
-        self.__client_socket.send(msg.encode('UTF-16'))
+        self.__client_socket.send(msg.encode("UTF-16"))
 
     def receive_message(self):
-        return self.__client_socket.recv(1024).decode('UTF-16')
+        return self.__client_socket.recv(1024).decode("UTF-16")
 
     def disconnect(self):
         self.__client_socket.close()
