@@ -5,11 +5,8 @@ if __name__ == "__main__":
 
     server.run()
 
-class messengerApp:
-    def __init__(self, listOfUsers:dict, listOfMessages:dict):
+
+class MessengerApp:
+    def __init__(self, listOfUsers: dict, listOfMessages: dict):
         self.__listOfUsers = listOfUsers
         self.__listOfMesseges = listOfMessages
-
-
-
-
