@@ -48,11 +48,14 @@ class Server(Thread):
             client_socket, client_address = server_socket.accept()
             print(f"""[SRV] Got a Connection from {client_address}""")
 
+
+
             send_message("Connected to Python Echo Server", client_socket)
+
 
             client_runs = True
             while client_runs:
-                client_message = receive_message(client_socket)
+                client_message = str(receive_message(client_socket))
                 if client_message == "QUIT":
                     client_runs = False
                     send_message("OK", client_socket)
@@ -66,3 +69,47 @@ class Server(Thread):
             client_socket.close()
 
         server_socket.close()
+
+    def start_service_menu(self):
+        service_menu =  "1. Load data from file.\n" \
+                        "2. Start the messenger service\n" \
+                        "3. Stop the messenger service\n" \
+                        "4. Save data to file\n"
+        print(service_menu)
+        option = input(int())
+
+        if option == 1:
+            # READ THAT FILE
+            print("Inside option 1")            # Test Filler - May delete
+        elif option == 2:
+            # BETTER START THAT MESSENGER
+            # MAYBE FOR RIGHT HERE, WE WANT:
+            #       1. MAYBE TO CREATE A NEW MESSENGING SYSTEM OBJECT IF ONE WASN'T LOADED IN
+            #       2. CALL FUNCTION TO OPEN THE NEXT MENU - USER LOGIN
+            print("Inside option 2")            # Test Filler - May delete
+        elif option == 3:
+            # BETTER STOP THAT MESSENGER
+            print("Inside option 3")            # Test Filler - May delete
+        elif option == 4:
+            # SAVE THE FILE
+            print("Inside option 4")            # Test Filler - May delete
+        else:
+            # DONE GOOF NOW - ERROR
+            print("Error: Invalid menu selection")
+
+    def sign_up(self, messengerApp, username, password):
+        # We want to access the messengerApp's current list of Users
+        # 1. Check if the username/email exists in our list of registered users?
+            # If so, success = Create an account, call User Constructor
+            # If not, display error
+        return # WE DON'T NEED THIS - MAY DELETE LATER
+
+    def sign_in(self, messengerApp, username, password):
+        # We want to access the messengerApp's current list of Users
+        # 1. Does the username/email in our list of registered users?
+        # 2. Is the password correct?
+        # If so, success = Create a thread for Client
+        # If not, display error
+        return # WE DON'T NEED THIS - MAY DELETE LATER
+
+
