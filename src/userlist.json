@@ -1,1 +1,4 @@
-{"rin": "B123", "pass": "word"}
+{
+  "user": ["robin", "sakura", "edward"],
+  "password": ["P0n3glyph", "Salad", "ein1"]
+}

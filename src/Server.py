@@ -52,7 +52,7 @@ class Server(Thread):
 
             client_runs = True
             while client_runs:
-                client_message = str(receive_message(client_socket))
+                client_message = receive_message(client_socket)
                 if client_message == "QUIT":
                     client_runs = False
                     send_message("OK", client_socket)
@@ -81,7 +81,7 @@ class Server(Thread):
         elif option == 2:
             # BETTER START THAT MESSENGER
             # MAYBE FOR RIGHT HERE, WE WANT:
-            #       1. MAYBE TO CREATE A NEW MESSENGING SYSTEM OBJECT IF ONE WASN'T LOADED IN
+            #       1. MAYBE TO CREATE A NEW MESSAGING SYSTEM OBJECT IF ONE WASN'T LOADED IN
             #       2. CALL FUNCTION TO OPEN THE NEXT MENU - USER LOGIN
             print("Inside option 2")  # Test Filler - May delete
         elif option == 3:

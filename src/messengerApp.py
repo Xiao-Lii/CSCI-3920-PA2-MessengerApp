@@ -9,4 +9,4 @@ if __name__ == "__main__":
 class MessengerApp:
     def __init__(self, listOfUsers: dict, listOfMessages: dict):
         self.__listOfUsers = listOfUsers
-        self.__listOfMesseges = listOfMessages
+        self.__listOfMessages = listOfMessages
