@@ -12,17 +12,17 @@ def send_message(msg: str, client_socket: socket):
 
 
 def receive_message(client_socket: socket, max_length: int = 1024):
-    try:
-        message_header = client_socket.recv(10)
-        if not len(message_header):
-            return False
-
-        message_length = int(message_header.decode("UTF-8"))
-        if message_length < 1025:
-            return {"header": message_header, "data": client_socket.recv(message_length)}
-
-    except:
-        return False
+    # try:
+    #     message_header = client_socket.recv(10)
+    #     if not len(message_header):
+    #         return False
+    #
+    #     message_length = int(message_header.decode("UTF-8"))
+    #     if message_length < 1025:
+    #         return {"header": message_header, "data": client_socket.recv(message_length)}
+    #
+    # except:
+    #     return False
 
     msg = client_socket.recv(max_length).decode("UTF-16")
     print(f"""[SRV] RCV >> {msg}""")

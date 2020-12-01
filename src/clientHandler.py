@@ -1,80 +1,124 @@
 from Client import Client
 import json
 
+client = Client("localhost", 10000)
 
-# TODO: I want to put the code in these functions but I'm getting this error..
-#   ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
-#   I'll come back to this later
-# def client_login():
-# def client_message():
-# def client_printReceiveMsg():
-def menu():
-    menuList = "1 | Connect to server\n" \
+
+# client connection to server
+def clientConnect():
+    client.connect()
+    server_msg = client.receive_message()
+    print(f"""[CLI] SRV -> {server_msg}""")
+    return True
+
+
+def client_sendMsg():
+    client_runs = True
+    while client_runs:
+        msg = input("Message to send: ")
+        client.send_message(msg)
+        server_msg = client.receive_message()
+        print(f"""[CLI] SRV-> {server_msg}""")
+
+        # user will be back to 2nd menu - still connected to server
+        if msg == "Disconnect" or msg == "Quit":
+            print("Logged out.")
+            client_runs = False
+
+
+if __name__ == "__main__":
+    # printing the whole menu
+    menuList = "----MENU----\n" \
+               "1 | Connect to server\n" \
                "2 | Login\n" \
                "3 | Send message\n" \
                "4 | Print received message\n" \
                "5 | Disconnect\n"
     print(menuList)
 
+    userMenu = input("Please enter your choice: ")
+    userMenu = int(userMenu)
+    clientMain = True
+    while clientMain:
+        if userMenu == 1:
+            clientConnect()
+            cc = True
+            while cc:  # menu when client is connected to server
+                menuList = "----MENU----\n" \
+                           "2 | Login\n" \
+                           "3 | Send message\n" \
+                           "4 | Print received message\n" \
+                           "5 | Disconnect\n"
+                print(menuList)
+                user1 = input("Please the number of your choice: ")
+                user1 = int(user1)
 
-if __name__ == "__main__":
-    client = Client("localhost", 10000)
+                if user1 == 1:
+                    print("Please choose the right option.")
 
-    menu()
-    userChoice = input("Enter choice: ")
-    userChoice = int(userChoice)
+                if user1 == 5:
+                    client_login = False
+                    cc = False
+                    clientMain = False
 
-    menuOption = True
-    while menuOption:
-        if userChoice == 1:
-            client.connect()
+                elif user1 == 2:
+                    client_login = True
+                    while client_login:
 
-            server_message = client.receive_message()
-            print(f"""[CLI] SRV -> {server_message}""")
-            menu()  # to remind user of the menu list :|
-            option = input("Enter thy choice: ")
-            option = int(option)
-            if option == 2:
-                # when client chooses 1 it will connect to the server
+                        # opens json file
+                        # filePath = "C:/Users/mario/Desktop/New folder/PA2Try/src/userlist.json"
+                        with open("userlist.json", "r") as openfile:
+                            jsonFile = json.load(openfile)
+                            jUser = jsonFile["user"]
+                            jPass = jsonFile["password"]
 
-                client_login = True
-                while client_login:
-                    with open("userlist.json", "r") as openfile:
-                        jsonFile = json.load(openfile)
+                        userName = input("Enter username: ")
+                        userPass = input("Enter password: ")
 
-                    userName = input("Enter username: ")
-                    userPass = input("Enter password: ")
-                    if userName in jsonFile["user"] and userPass in jsonFile["password"]:
-                        print("\n[%s] is logged in!\n" % userName.upper())
-                        menu()
-                        option = input("Enter thy choice: ")
-                        option = int(option)
+                        if userName in jUser and userPass in jPass:
+                            print("\n[%s] is logged in!\n" % userName.upper())
 
-                        client_runs = True
-                        while client_runs:
-                            if option == 3:
-                                msg = input("Message to send: ")
-                                client.send_message(msg)
+                            # menu when user is logged in
+                            menuList = "----MENU----\n" \
+                                       "3 | Send message\n" \
+                                       "4 | Print received message\n" \
+                                       "5 | Disconnect\n"
+                            print(menuList)
+                            user2 = input("Please type the number of your choice: ")
+                            user2 = int(user2)
 
-                                # TODO:
-                                #   still need to do #4 and I don't know what to do with 3
-                                #   prints received messages saved in servers json file
-                                #   once the saved message was received by client, the message
-                                #   sent must be removed in server
-                                server_message = client.receive_message()
-                                print(f"""[CLI] SRV -> {server_message}""")
+                            if user2 == 3:
+                                client_sendMsg()
 
-                                if msg == "TERMINATE" or msg == "QUIT":
-                                    client_runs = False
-                            elif option == 5:
-                                client_runs = False
+                            # TODO - do #4
 
-                    else:
-                        print("username and/or password is incorrect!"
-                              "\nPlease try again!")
+                            if user2 == 5:
+                                client_login = False
+                                cc = False
+                                clientMain = False
 
+                            elif user2 > 5 or user2 < 2:
+                                print("Enter the right option")
 
+                            # if user doesn't want to login
+                            # TODO: test if this works
+                            if userName == "x" or "X" or userPass == "x" or "X":
+                                client_login = False
 
-                # TODO:
-                #   need to create a background thread. this thread receives the messages of the server and stores it
-                #   in the list??? then this thread will be connected to the server
+                        else:
+                            print("\nUsername or Password is incorrect!\n")
+
+                else:
+                    print("Please log in")
+
+        # will disconnect client from server
+        if userMenu == 5:
+            client_login = False
+            cc = False
+            clientMain = False
+
+        elif 1 < userMenu < 5:
+            print("Please connect to server")
+
+        elif 1 > userMenu > 5:
+            print("Please choose the right option")
