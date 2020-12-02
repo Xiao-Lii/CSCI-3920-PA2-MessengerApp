@@ -3,11 +3,12 @@ import select
 from threading import Thread
 
 socket_list = []
+clients = {}
 
 
 def send_message(msg: str, client_socket: socket):
     print(f"""[SRV] SEND >> {msg}""")
-    client_socket.send(msg.encode("UTF-16"))
+    client_socket.send(msg.encode("UTF-8"))
     pass
 
 
@@ -17,14 +18,14 @@ def receive_message(client_socket: socket, max_length: int = 1024):
         if not len(message_header):
             return False
 
-        message_length = int(message_header.decode("UTF-8"))
+        message_length = int(message_header.decode("UTF-8").strip())
         if message_length < 1025:
             return {"header": message_header, "data": client_socket.recv(message_length)}
 
     except:
         return False
 
-    msg = client_socket.recv(max_length).decode("UTF-16")
+    msg = client_socket.recv(max_length).decode("UTF-8")
     print(f"""[SRV] RCV >> {msg}""")
     return msg
 
@@ -42,13 +43,45 @@ class Server(Thread):
         server_socket.bind((self.__ip, self.__port))
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server_socket.listen(self.__backlog)
+        socket_list.append(server_socket)
 
         while self.__keep_running:
             print(f"""[SRV] Waiting for Client""")
             client_socket, client_address = server_socket.accept()
             print(f"""[SRV] Got a Connection from {client_address}""")
 
+            read_sockets, _, exception_sockets, = select.select(socket_list, [], socket_list)
 
+            for notified_socket in read_sockets:
+                if notified_socket == server_socket:
+                    client_socket, client_address = server_socket.accept()
+                    user = receive_message(client_socket)
+                    if user is False:
+                        continue
+
+                    socket_list.append(client_socket)
+                    clients[client_socket] = user
+                    print(f"Accepted new connection from {client_address[0]}:{client_address[1]}"
+                          f"username:{user['data'].decode('UTF-8')}")
+                else:
+                    message = receive_message(notified_socket)
+                    if message is False:
+                        print(f"Closed connection from {clients[notified_socket]['data'].decode('UTF-8')}")
+                        socket_list.remove(notified_socket)
+                        del clients[notified_socket]
+                        continue
+
+                    user = clients[notified_socket]
+                    print(f"Received message from {user['data'].decode('UTF-8')}: "
+                          f"{message['data'].decode('UTF-8')}")
+
+                for client_socket in clients:
+                    if client_socket != notified_socket:
+                        client_socket.send(user['header'] + user['data'] + message['header'] + message['data'])
+
+            for notified_socket in exception_sockets:
+                socket_list.remove(notified_socket)
+                del clients[notified_socket]
 
             send_message("Connected to Python Echo Server", client_socket)
 
