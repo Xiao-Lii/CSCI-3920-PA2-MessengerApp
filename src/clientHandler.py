@@ -3,11 +3,13 @@ import json
 
 client = Client("localhost", 10000)
 
+# Create ServerWorker in this ClientHandler Class File
 
 def clientConnect():
     client.connect()
     server_msg = client.receive_message()
     print(f"""[CLI] SRV -> {server_msg}""")
+    # Create a new thread to clientWorker one for sending
     return True
 
 
@@ -39,9 +41,7 @@ def updatedMenu():
 def clientLogIn():
     menuList = input("\n----MENU----\n" \
                      "1 | Login\n" \
-                     "2 | Send message\n" \
-                     "3 | Print received message\n" \
-                     "4 | Disconnect\n"
+                     "2 | Disconnect\n"
                      "\nPlease enter your choice: ")
 
     menuList = int(menuList)
@@ -76,10 +76,10 @@ def clientLogIn():
                 else:
                     print("\nUsername or password is incorrect!\n")
 
-        elif 1 < menuList < 4:
+        elif 1 < menuList < 2:
             print("Log in to connect to server")
 
-        elif 1 > menuList > 4:
+        elif 1 > menuList > 2:
             print("Please choose the right option")
 
 
