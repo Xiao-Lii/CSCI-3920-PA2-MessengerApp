@@ -3,11 +3,13 @@ import json
 
 client = Client("localhost", 10000)
 
+# Create ServerWorker in this ClientHandler Class File
 
 def clientConnect():
     client.connect()
     server_msg = client.receive_message()
     print(f"""[CLI] SRV -> {server_msg}""")
+    # Create a new thread to clientWorker one for sending
     return True
 
 

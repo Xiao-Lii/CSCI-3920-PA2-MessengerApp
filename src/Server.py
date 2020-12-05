@@ -27,6 +27,10 @@ def receive_message(client_socket: socket, max_length: int = 1024):
     print(f"""[SRV] RCV >> {msg}""")
     return msg
 
+# 1. Start a Multi-threaded Server
+# 2. While True, attempt to accept a client connection
+# 3. If connection is received = Create a ClientWorker
+# 4.
 
 class Server(Thread):
     def __init__(self, ip: str, port: int, backlog: int):
@@ -36,6 +40,7 @@ class Server(Thread):
         self.__backlog = backlog
         self.__keep_running = True
 
+    # Server = Main Thread that's always listening for clients
     def run(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.bind((self.__ip, self.__port))
@@ -45,6 +50,10 @@ class Server(Thread):
         while self.__keep_running:
             print(f"""[SRV] Waiting for Client""")
             client_socket, client_address = server_socket.accept()
+
+            # IF CLIENT CONNECTION RECEIVED
+            # Create a new thread to clientWorker one for sending
+
             print(f"""[SRV] Got a Connection from {client_address}""")
 
             send_message("Connected to Python Echo Server", client_socket)
@@ -62,6 +71,7 @@ class Server(Thread):
                     send_message("OK", client_socket)
                 else:
                     send_message(client_message.upper(), client_socket)
+
 
             client_socket.close()
 
