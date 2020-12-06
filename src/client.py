@@ -157,8 +157,11 @@ if __name__ == "__main__":
     while keep_running:
         option = client.display_menu()
         if option == 1:
-            client.ip = input("IP Address>")
-            client.port = int(input("Port>"))
+            #client.ip = input("IP Address>")
+            client.ip = "localhost"
+            #client.port = int(input("Port>"))
+            client.port = 10000
+
             client.connect()
             print(client.receive_message())
         elif option == 2:
