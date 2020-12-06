@@ -10,7 +10,7 @@ class Database:
     def __init__(self, users=None, outgoing_messages=None, outgoing_notifications=None):
         if users is None:
             self.__users = []
-            admin = User("admin", "admin", "1")
+            admin = User("admin", "pw", "admin")
             self.__users.append(admin)
         else:
             self.__users = users
@@ -43,6 +43,8 @@ class Database:
 
     # region Methods
 
+
+    # NEED TO DOUBLE CHECK THIS PART, DATABASE IS ALLOWING 2 USERS TO SIGN UP WITH THE SAME EMAIL / USERNAME
     def sign_up_user(self, username: str, password: str, phone_number: str):
         """Checks to see that the username doesn't already exist and then adds the user to the database"""
         success = True
@@ -57,7 +59,7 @@ class Database:
         if success:
             user_to_add = User(username, password, phone_number)
             self.__users.append(user_to_add)
-            response = "0|OK"
+            response = "0|SUCCESS"
 
         print("List of users:")
         for user in self.__users:
