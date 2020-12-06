@@ -3,7 +3,7 @@ from threading import Thread
 
 
 class ServerWorker(Thread):
-    def __init__(self, port_to_listen: int):
+    def __init__(self, port_to_listen:int):
         super().__init__()
         self.__port = port_to_listen
         self.__server_socket = None
@@ -44,7 +44,7 @@ class ServerWorker(Thread):
             if arguments[0] == "R":
                 response = f"0|{arguments[2]}"
                 message = arguments[3]
-                self.__incoming_messages.append(f"{arguments[1]} said: {message}")
+                self.__incoming_messages.append(f"[{arguments[1]}]: {message}")
             elif arguments[0] == "OK":
                 response = "0|OK"
                 self.display_message(f"Message {arguments[3]} successfully received by {arguments[2]}.")

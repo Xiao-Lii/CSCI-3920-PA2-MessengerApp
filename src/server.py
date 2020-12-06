@@ -6,10 +6,12 @@ from message import Message
 import socket
 import json
 import queue
+import time
 
-"""Server main thread"""
+
 class Server(Thread):
-    def __init__(self, ip: str, port: int, backlog: int):
+    """Server - Our Main Thread for Starting the Messenger App"""
+    def __init__(self, ip:str, port:int, backlog:int):
         super().__init__()
         self.__ip = ip
         self.__port = port
@@ -19,7 +21,8 @@ class Server(Thread):
         self.__keep_running = True
         self.__keep_running_client = True
         self.__database = Database()
-        self.__list_of_cw = []
+        self.__list_of_connected_clients = []
+        self.__connected_users = []
         self.__connection_count = 0
 
 
@@ -28,15 +31,18 @@ class Server(Thread):
         return self.__database
 
     @property
-    def list_of_cw(self):
-        return self.__list_of_cw
+    def list_of_connected_clients(self):
+        return self.__list_of_connected_clients
+
+    def connected_users (self):
+        return self.__connected_users
 
     @property
     def keep_running(self):
         return self.__keep_running
 
     @keep_running.setter
-    def keep_running(self, status: bool):
+    def keep_running(self, status:bool):
         self.__keep_running = status
 
 
@@ -56,13 +62,13 @@ class Server(Thread):
                 self.__connection_count += 1
                 print(f"""[SRV] Got a connection from {client_address}""")
                 cw = ClientWorker(self.__connection_count, self.__client_socket, self.__database, self)
-                self.__list_of_cw.append(cw)
+                self.__list_of_connected_clients.append(cw)
                 cw.start()
             except Exception as e:
                 print(e)
 
         cw: ClientWorker
-        for cw in self.__list_of_cw:
+        for cw in self.__list_of_connected_clients:
             cw.terminate_connection()
             cw.join()
 
@@ -70,65 +76,86 @@ class Server(Thread):
         filename = input("Filename w/o file type extension (.json files only): ")
         try:
             with open(f"{filename}.json", "r") as database_file:
-                database_dict = json.load(database_file)
+                database_list = json.load(database_file)
                 print("SUCCESS: Data uploaded successfully")
         except FileNotFoundError as fe:
             print(fe)
             return
 
         users_list = []
-        for user_dict in database_dict["user_dict"]:
-            user = User(user_dict.get("_User__username"), user_dict.get("_User__password"),
-                        user_dict.get("_User__email"))
+        for user_info in database_list["user_list"]:
+            user = User(user_info.get("_User__username"), user_info.get("_User__password"),
+                        user_info.get("_User__email"))
             users_list.append(user)
 
         messages_queue = queue.Queue
-        for message_dict in database_dict["messages_dict"]:
-            user_from_dict = message_dict["_Message__user_from"]
-            user_to_dict = message_dict["_Message__user_to"]
-            user_from = User(user_from_dict.get("_User__username"), user_from_dict.get("_User__password"),
-                             user_from_dict.get("_User__email"))
-            user_to = User(user_to_dict.get("_User__username"), user_to_dict.get("_User__password"),
-                           user_to_dict.get("_User__email"))
-            message_to_put = Message(user_from, user_to, message_dict.get("_Message__content"))
+        for message_in_queue in database_list["message_list"]:
+
+            # Loading up Messages in Queue for Sender and Receivers
+            sending_user_msgs = message_in_queue["_Message__user_from"]
+            receiving_user_msgs = message_in_queue["_Message__user_to"]
+
+            # Retrieving Sender and Receiver's Data
+            sender = User(sending_user_msgs.get("_User__username"), sending_user_msgs.get("_User__password"),
+                             sending_user_msgs.get("_User__email"))
+            recipient = User(receiving_user_msgs.get("_User__username"), receiving_user_msgs.get("_User__password"),
+                           receiving_user_msgs.get("_User__email"))
+
+            # Assembling Message to be sent with data collected
+            message_to_put = Message(sender, recipient, message_in_queue.get("_Message__content"))
             messages_queue.put(message_to_put)
 
         notification_queue = queue.Queue
-        for notification_dict in database_dict["notifications_dict"]:
-            user_from_dict = notification_dict["_Message__user_from"]
-            user_to_dict = notification_dict["_Message__user_to"]
-            user_from = User(user_from_dict.get("_User__username"), user_from_dict.get("_User__password"),
-                             user_from_dict.get("_User__email"))
-            user_to = User(user_to_dict.get("_User__username"), user_to_dict.get("_User__password"),
-                           user_to_dict.get("_User__email"))
-            message_to_put = Message(user_from, user_to, notification_dict.get("_Message__content"))
+        for notification_list in database_list["notification_list"]:
+
+            # Loading up Notications for Messages in Queue for Sender and Receivers
+            sending_user_msgs = notification_list["_Message__user_from"]
+            receiving_user_msgs = notification_list["_Message__user_to"]
+
+            # Retrieving Sender and Receiver's Data
+            sender = User(sending_user_msgs.get("_User__username"), sending_user_msgs.get("_User__password"),
+                             sending_user_msgs.get("_User__email"))
+            recipient = User(receiving_user_msgs.get("_User__username"), receiving_user_msgs.get("_User__password"),
+                           receiving_user_msgs.get("_User__email"))
+
+            # Assembling Notification Message to be sent with data collected
+            message_to_put = Message(sender, recipient, notification_list.get("_Message__content"))
             messages_queue.put(message_to_put)
 
         self.__database = Database(users_list, messages_queue, notification_queue)
 
     def save_to_file(self):
-        database_dict = {"user_dict": [], "messages_dict": [], "notifications_dict": []}
+        database_list = {"user_list": [], "message_list": [], "notification_list": []}
+
+        # Iterates through all users to append to our database
         for user in self.__database.users:
             serialized_user = user.__dict__
-            database_dict["user_dict"].append(serialized_user)
+            database_list["user_list"].append(serialized_user)
+
+        # Iterates through all messages to append to our database
         for message in list(self.__database.outgoing_messages.queue):
             serialized_message = {"id": message.id, "user_to": {message.user_to.__dict__},
                                   "user_from": {message.user_from.__dict__}, "content": message.content}
-            database_dict["messages_dict"].append(serialized_message)
+            database_list["message_list"].append(serialized_message)
+
+        # Iterates through all notifications to append to our database
         for notification in list(self.__database.outgoing_notifications.queue):
             serialized_notification = {"id": notification.id, "user_to": {notification.user_to.__dict__},
                                        "user_from": {notification.user_from.__dict__}, "content": notification.content}
-            database_dict["messages_dict"].append(serialized_notification)
+            database_list["message_list"].append(serialized_notification)
 
+        # Prompts the user for the filename to save/write into
         filename = input("Filename w/o file type extension (.json files only): ")
         try:
             with open(f'{filename}.json', 'w') as database_file:
-                json.dump(database_dict, database_file)
-        except Exception as e:
-            print(e)
+                json.dump(database_list, database_file)
+
+        # Error Handling: Issues with Writing/Saving to File
+        except Exception as error:
+            print(error)
 
     def display_menu(self):
-        service_menu =  "--- Server Main Menu ---\n" \
+        service_menu =  "----- Server Main Menu -----\n" \
                         "1. Load data from file.\n" \
                         "2. Start the messenger service\n" \
                         "3. Stop the messenger service\n" \
@@ -145,16 +172,17 @@ class ClientWorker(Thread):
         self.__client_socket = client_socket
         self.__database = database
         self.__server = server
-        self.__user = None
-        self.__keep_clientRunning = True
         self.__background_client_worker = BackgroundClientWorker()
+        self.__keep_clientRunning = True
+        self.__user = None
+
 
     @property
     def id(self):
         return self.__id
 
     @id.setter
-    def id(self, client_id: int):
+    def id(self, client_id:int):
         self.__id = client_id
 
     @property
@@ -197,7 +225,7 @@ class ClientWorker(Thread):
     def keep_client_running(self, state: bool):
         self.__keep_clientRunning = state
 
-    def connect_to_client_background(self, port):
+    def connect_to_bg_client(self, port):
         self.__background_client_worker.client_socket = self.__client_socket
         self.__background_client_worker.database = self.__database
         self.__background_client_worker.port = port
@@ -206,42 +234,49 @@ class ClientWorker(Thread):
     def terminate_connection(self):
         self.__keep_clientRunning = False
         self.__background_client_worker.terminate_connection()
+
         return "0|OK"
 
-
-    def send_message(self, msg: str):
+    def send_message(self, msg:str):
         self.display_message(f"""[SRV] >> {msg}""")
         self.__client_socket.send(msg.encode("UTF-8"))
 
     def receive_message(self, max_length: int = 1024):
         msg = self.__client_socket.recv(max_length).decode("UTF-8")
-        print(f"""RECV>> {msg}""")
+        print(f"""[RECV] {msg}""")
         return msg
 
-    def display_message(self, msg: str):
-        print(f"""CW >> {msg}""")
+    def display_message(self, msg:str):
+        print(f"""[CW] {msg}""")
 
-    def sign_in_user(self, username: str, password: str):
-        user_to_sign_in = None
-        response = ""
+    def sign_in_user(self, username:str, password:str):
         user: User
-        cw: ClientWorker
         signed_in = False
-        # search for user where the username and password match
+        cw: ClientWorker
+        response = ""
+
+        # Check if User is found in Database's list of Users
         for user in self.__database.users:
+            # If found, check if username and password match per user
             if user.username == username and user.password == password:
-                # then search thru the list of connected clients to make sure the user isn't already signed in
-                for cw in self.__server.list_of_cw:
+                # If credentials match, need to verify that if user is already signed in or not
+
+                # SERVER NOT DETECTING IF USER IS ALREADY SIGNED IN OR NOT WITH THE LIST BELOW
+                # MAY NEED TO CHANGE IT TO CHECK WITH A LIST OF USERS THAT ARE CONNECTED
+                # CLIENT RECEIVES AN ERROR OF '1|Invalid Credentials' INSTEAD OF ERROR 2
+                for cw in self.__server.list_of_connected_clients:
                     if cw.user is user:
                         response = "2|Already signed in."
                         signed_in = True
                         break
-                # if the user isn't already signed in...
+
+                # Otherwise, if user is not in list of connected clients, proceed to sign in
                 if not signed_in:
                     self.__user = user
                     self.__background_client_worker.user = user
                     self.display_message(f"Successfully signed in {self.__user.username}")
                     response = "0|OK"
+
             # if the user name matches but the password doesn't...
             elif user.username is username and password is not user.password:
                 self.display_message("Incorrect password")
@@ -256,19 +291,17 @@ class ClientWorker(Thread):
     def sign_out_user(self):
         pass
 
-
     def run(self):
-        self.display_message("Connected to Client. Attempting connection to client background thread")
+        self.display_message("SUCCESS: Connected to Client. Attempting connection to client background thread")
         for user in self.__database.users:
             print(user)
         while self.__keep_clientRunning:
             self.process_client_request()
 
         self.__client_socket.close()
-        for client in self.__server.list_of_cw:
+        for client in self.__server.list_of_connected_clients:
             if client.id == self.__id:
-                self.__server.list_of_cw.remove(client)
-
+                self.__server.list_of_connected_clients.remove(client)
 
     def process_client_request(self):
         client_message = self.receive_message()
@@ -279,18 +312,17 @@ class ClientWorker(Thread):
 
         try:
             if arguments[0] == "PORT":
-                # Need to figure out how to handle response here. The background clientworker may need to time out
-                # after a certain number of tries.
-                self.connect_to_client_background(int(arguments[1]))
+                self.connect_to_bg_client(int(arguments[1]))
                 response = "OK"
-            elif arguments[0] == "LOG":
+            elif arguments[0] == "LOGIN":
                 response = self.sign_in_user(arguments[1], arguments[2])
-            elif arguments[0] == "USR":
+            elif arguments[0] == "ADD":
                 response = self.database.sign_up_user(arguments[1], arguments[2], arguments[3])
             elif arguments[0] == "MSG":
                 response = self.database.send_message(arguments[1], arguments[2], arguments[3])
-            elif arguments[0] == "OUT":
+            elif arguments[0] == "QUIT":
                 response = self.terminate_connection()
+            # Error Handling: In case if client request was unrecognizable
             else:
                 response = "ERR|Unknown Command."
         except ValueError as ve:
@@ -299,12 +331,14 @@ class ClientWorker(Thread):
         self.send_message(response)
 
 
-
 if __name__ == "__main__":
     keep_running = True
-    server = Server("localhost", 10000, 20)
+    server = Server("localhost", 10000, 30)
 
     while keep_running:
+        # Sometimes the menu displays before responses are displayed
+        # One second delay to display menu
+        time.sleep(1)
         option = server.display_menu()
         if option == 1:
             server.load_from_file()
@@ -316,8 +350,6 @@ if __name__ == "__main__":
             keep_running = False
         elif option == 4:
             server.save_to_file()
-        elif option == 9:
-            print(len(server.list_of_cw))
         else:
             print("Invalid option, try again \n\n")
 
