@@ -1,13 +1,8 @@
-# region Client
-
-from serverworker import ServerWorker
 import socket
 import random
-
+from serverWorker import ServerWorker
 
 class Client:
-    """The main client thread"""
-
     def __init__(self, ip: str = None, port: int = None):
         self.__ip = ip
         self.__port = port
@@ -17,7 +12,6 @@ class Client:
         self.__is_logged_in = False
         self.__username_of_user = None
 
-    # region Getters and Setters
 
     @property
     def ip(self):
@@ -39,9 +33,6 @@ class Client:
     def username_of_user(self):
         return self.__username_of_user
 
-    # endregion
-
-    # region Methods
 
     def connect(self):
         # Connect to the server
@@ -144,12 +135,6 @@ class Client:
         print(cMenu)
         return int(input())
 
-    # endregion
-
-
-# endregion
-
-# region ClientApp
 
 if __name__ == "__main__":
     keep_running = True
@@ -199,5 +184,3 @@ if __name__ == "__main__":
         # Error - Invalid Option
         else:
             print("Invalid option, try again \n\n")
-
-# endregion
