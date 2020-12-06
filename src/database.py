@@ -10,8 +10,10 @@ class Database:
             # Initializing with an Admin & Basic User
             admin = User("admin", "pw", "admin")
             user = User("user", "pw", "user")
+            user2 = User("user2", "pw", "user2")
             self.__users.append(admin)
             self.__users.append(user)
+            self.__users.append(user2)
         # Otherwise, Initializing with list of Users
         else:
             self.__users = users
