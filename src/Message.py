@@ -1,10 +1,7 @@
-# region Message
-
 from user import User
 
 
 class Message:
-    """Stores message content and the message id"""
     ID = 1
 
     def __init__(self, user_from: User, user_to: User, content: str):
@@ -34,7 +31,6 @@ class Message:
     def content(self, content):
         self.__content = content
 
-    # region Utility
 
     @classmethod
     def reset_id_numbering(cls):
@@ -45,7 +41,3 @@ class Message:
 
     def __repr__(self):
         return f"""FROM: {self.__user_from.username}|TO: {self.__user_to.username}|MSG: {self.__content}"""
-
-    # endregion
-
-# endregion

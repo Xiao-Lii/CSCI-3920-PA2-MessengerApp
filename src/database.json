@@ -1,5 +1,5 @@
 {
-  "user_dict": [{"_User__username": "user", "_User__password": "pw", "_User__phone": "1"}],
+  "user_dict": [{"_User__username": "user", "_User__password": "pw", "_User__email": "user"}],
   "messages_dict": [],
   "notifications_dict": []
 }

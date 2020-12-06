@@ -1,14 +1,14 @@
 # region Server
 
-# from clientworker import ClientWorker
 from threading import Thread
-import socket
 from database import Database
 from user import User
-from background_clientworker import BackgroundClientWorker
+from bg_clientWorker import BackgroundClientWorker
+from message import Message
+import socket
 import json
 import queue
-from message import Message
+
 
 
 class Server(Thread):
@@ -76,7 +76,7 @@ class Server(Thread):
             cw.join()
 
     def load_from_file(self):
-        filename = input("Enter the name of the file you'd like to load (no file extension)>")
+        filename = input("Filename w/o file type extension (.json files only): ")
         try:
             with open(f"{filename}.json", "r") as database_file:
                 database_dict = json.load(database_file)
@@ -87,7 +87,7 @@ class Server(Thread):
         users_list = []
         for user_dict in database_dict["user_dict"]:
             user = User(user_dict.get("_User__username"), user_dict.get("_User__password"),
-                        user_dict.get("_User__phone"))
+                        user_dict.get("_User__email"))
             users_list.append(user)
 
         messages_queue = queue.Queue
@@ -95,9 +95,9 @@ class Server(Thread):
             user_from_dict = message_dict["_Message__user_from"]
             user_to_dict = message_dict["_Message__user_to"]
             user_from = User(user_from_dict.get("_User__username"), user_from_dict.get("_User__password"),
-                             user_from_dict.get("_User__phone"))
+                             user_from_dict.get("_User__email"))
             user_to = User(user_to_dict.get("_User__username"), user_to_dict.get("_User__password"),
-                           user_to_dict.get("_User__phone"))
+                           user_to_dict.get("_User__email"))
             message_to_put = Message(user_from, user_to, message_dict.get("_Message__content"))
             messages_queue.put(message_to_put)
 
@@ -106,9 +106,9 @@ class Server(Thread):
             user_from_dict = notification_dict["_Message__user_from"]
             user_to_dict = notification_dict["_Message__user_to"]
             user_from = User(user_from_dict.get("_User__username"), user_from_dict.get("_User__password"),
-                             user_from_dict.get("_User__phone"))
+                             user_from_dict.get("_User__email"))
             user_to = User(user_to_dict.get("_User__username"), user_to_dict.get("_User__password"),
-                           user_to_dict.get("_User__phone"))
+                           user_to_dict.get("_User__email"))
             message_to_put = Message(user_from, user_to, notification_dict.get("_Message__content"))
             messages_queue.put(message_to_put)
 
@@ -128,7 +128,7 @@ class Server(Thread):
                                        "user_from": {notification.user_from.__dict__}, "content": notification.content}
             database_dict["messages_dict"].append(serialized_notification)
 
-        filename = input("Name the file you want to save the database to (no file extension)>")
+        filename = input("Filename w/o file type extension (.json files only): ")
         try:
             with open(f'{filename}.json', 'w') as database_file:
                 json.dump(database_dict, database_file)
@@ -144,15 +144,9 @@ class Server(Thread):
                         "Please select an option: \n"
         return int(input(service_menu))
 
-    # endregion
 
-
-# endregion
-
-# region ClientWorker
+"""ClientWorker will listen for Client Requests"""
 class ClientWorker(Thread):
-    """Threads that listen to client requests."""
-
     def __init__(self, client_id: int, client_socket: socket, database: Database, server: Server):
         super().__init__()
         self.__id = client_id
@@ -212,9 +206,7 @@ class ClientWorker(Thread):
     def keep_running_client(self, state: bool):
         self.__keep_running_client = state
 
-    # endregion
 
-    # region Methods
 
     def sign_in_user(self, username: str, password: str):
         user_to_sign_in = None
@@ -252,9 +244,6 @@ class ClientWorker(Thread):
         pass
 
     def connect_to_client_background(self, port):
-        # print(f"""{str(self.__client_socket.getpeername()[0])}{port}""")
-        # self.__background_client_worker = BackgroundClientWorker(self.__client_socket, self.__database, self.__user,
-        # port)
         self.__background_client_worker.client_socket = self.__client_socket
         self.__background_client_worker.database = self.__database
         self.__background_client_worker.port = port
@@ -279,7 +268,7 @@ class ClientWorker(Thread):
 
     def process_client_request(self):
         client_message = self.receive_message()
-        self.display_message(f"""CLIENT SAID >> {client_message}""")
+        self.display_message(f"""[CLIENT] {client_message}""")
 
         arguments = client_message.split("|")
         response = ""

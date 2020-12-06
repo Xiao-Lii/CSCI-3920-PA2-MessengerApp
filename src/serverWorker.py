@@ -1,7 +1,6 @@
 # region ServerWorker
 
 import socket
-
 from threading import Thread
 
 
@@ -41,11 +40,11 @@ class ServerWorker(Thread):
         return self.__client_socket.recv(max_length).decode("UTF-8")
 
     def display_message(self, msg: str):
-        print(f"""CLIENT (BG) >> {msg}""")
+        print(f"""[BG.CLIENT] {msg}""")
 
     def process_server_request(self):
         server_message = self.receive_message()
-        self.display_message(f"""SERVER SAID >>>{server_message}""")
+        self.display_message(f"""[SERVER NOTIFICATION] {server_message}""")
 
         arguments = server_message.split("|")
         response = ""
@@ -70,7 +69,7 @@ class ServerWorker(Thread):
     def run(self):
         self.__server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__server_socket.bind(("localhost", self.__port))
-        self.display_message("Listening for connections...")
+        self.display_message("[STANDBY] Listening for connections")
         self.__server_socket.listen(1)
         self.__client_socket, client_address = self.__server_socket.accept()
         self.display_message(f"""Got a connection from {client_address}""")

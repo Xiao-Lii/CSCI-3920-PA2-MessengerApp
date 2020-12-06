@@ -1,9 +1,7 @@
-# region ClientWorker
+import socket
 import time
 from threading import Thread
-import socket
 from database import Database
-# from server import Server
 from user import User
 
 
@@ -16,11 +14,9 @@ class BackgroundClientWorker(Thread):
         self.__server_socket = None
         self.__port = port
         self.__database = database
-        # self.__server = server
         self.__user = user
         self.__keep_running_client = True
 
-    # region Setters and Getters
     @property
     def id(self):
         return self.__id
@@ -53,14 +49,6 @@ class BackgroundClientWorker(Thread):
     def port(self, port: int):
         self.__port = port
 
-    # @property
-    # def server(self):
-    #     return self.__server
-    #
-    # @server.setter
-    # def server(self, server: Server):
-    #     self.__server = server
-
     @property
     def user(self):
         return self.__user
@@ -77,9 +65,6 @@ class BackgroundClientWorker(Thread):
     def keep_running_client(self, state: bool):
         self.__keep_running_client = state
 
-    # endregion
-
-    # region Methods
 
     def run(self):
         self.display_message("Connected to Client. Attempting connection to client background thread")
@@ -87,7 +72,6 @@ class BackgroundClientWorker(Thread):
             try:
                 self.__server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.__server_socket.connect((str(self.__client_socket.getpeername()[0]), self.__port))
-                # self.__client_socket.send("OK|".encode("UTF-16"))
                 self.display_message("Successfully connected to client's server worker.")
                 break
             except socket.error as se:
@@ -96,7 +80,6 @@ class BackgroundClientWorker(Thread):
 
         while self.__keep_running_client:
             self.check_for_messages()
-            # time.sleep(5)
         self.__server_socket.close()
 
     def terminate_connection(self):
@@ -105,7 +88,6 @@ class BackgroundClientWorker(Thread):
 
     def check_for_messages(self):
         if not list(self.__database.outgoing_messages.queue):
-            # self.display_message("Outgoing Messages queue empty.")
             pass
         elif list(self.__database.outgoing_messages.queue)[-1].user_to is self.__user:
             message_obj = self.__database.outgoing_messages.get()
