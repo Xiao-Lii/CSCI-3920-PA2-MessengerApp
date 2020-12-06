@@ -1,5 +1,3 @@
-# region Server
-
 from threading import Thread
 from database import Database
 from user import User
@@ -9,11 +7,8 @@ import socket
 import json
 import queue
 
-
-
+"""Server main thread"""
 class Server(Thread):
-    """Server main thread"""
-
     def __init__(self, ip: str, port: int, backlog: int):
         super().__init__()
         self.__ip = ip
@@ -27,7 +22,6 @@ class Server(Thread):
         self.__list_of_cw = []
         self.__connection_count = 0
 
-    # region Getters and setters
 
     @property
     def database(self):
@@ -45,9 +39,6 @@ class Server(Thread):
     def keep_running(self, status: bool):
         self.__keep_running = status
 
-    # endregion
-
-    # region Methods
 
     def terminate_server(self):
         self.__keep_running = False
@@ -80,6 +71,7 @@ class Server(Thread):
         try:
             with open(f"{filename}.json", "r") as database_file:
                 database_dict = json.load(database_file)
+                print("SUCCESS: Data uploaded successfully")
         except FileNotFoundError as fe:
             print(fe)
             return
@@ -154,10 +146,9 @@ class ClientWorker(Thread):
         self.__database = database
         self.__server = server
         self.__user = None
-        self.__keep_running_client = True
+        self.__keep_clientRunning = True
         self.__background_client_worker = BackgroundClientWorker()
 
-    # region Setters and Getters
     @property
     def id(self):
         return self.__id
@@ -183,10 +174,6 @@ class ClientWorker(Thread):
         self.__database = database
 
     @property
-    def user(self):
-        return self.__user
-
-    @property
     def server(self):
         return self.__server
 
@@ -194,19 +181,45 @@ class ClientWorker(Thread):
     def server(self, server: Server):
         self.__server = server
 
+    @property
+    def user(self):
+        return self.__user
+
     @user.setter
     def user(self, user: User):
         self.__user = user
 
     @property
-    def keep_running_client(self):
-        return self.__keep_running_client
+    def keep_client_running(self):
+        return self.__keep_clientRunning
 
-    @keep_running_client.setter
-    def keep_running_client(self, state: bool):
-        self.__keep_running_client = state
+    @keep_client_running.setter
+    def keep_client_running(self, state: bool):
+        self.__keep_clientRunning = state
+
+    def connect_to_client_background(self, port):
+        self.__background_client_worker.client_socket = self.__client_socket
+        self.__background_client_worker.database = self.__database
+        self.__background_client_worker.port = port
+        self.__background_client_worker.start()
+
+    def terminate_connection(self):
+        self.__keep_clientRunning = False
+        self.__background_client_worker.terminate_connection()
+        return "0|OK"
 
 
+    def send_message(self, msg: str):
+        self.display_message(f"""[SRV] >> {msg}""")
+        self.__client_socket.send(msg.encode("UTF-8"))
+
+    def receive_message(self, max_length: int = 1024):
+        msg = self.__client_socket.recv(max_length).decode("UTF-8")
+        print(f"""RECV>> {msg}""")
+        return msg
+
+    def display_message(self, msg: str):
+        print(f"""CW >> {msg}""")
 
     def sign_in_user(self, username: str, password: str):
         user_to_sign_in = None
@@ -243,17 +256,12 @@ class ClientWorker(Thread):
     def sign_out_user(self):
         pass
 
-    def connect_to_client_background(self, port):
-        self.__background_client_worker.client_socket = self.__client_socket
-        self.__background_client_worker.database = self.__database
-        self.__background_client_worker.port = port
-        self.__background_client_worker.start()
 
     def run(self):
         self.display_message("Connected to Client. Attempting connection to client background thread")
         for user in self.__database.users:
             print(user)
-        while self.__keep_running_client:
+        while self.__keep_clientRunning:
             self.process_client_request()
 
         self.__client_socket.close()
@@ -261,10 +269,6 @@ class ClientWorker(Thread):
             if client.id == self.__id:
                 self.__server.list_of_cw.remove(client)
 
-    def terminate_connection(self):
-        self.__keep_running_client = False
-        self.__background_client_worker.terminate_connection()
-        return "0|OK"
 
     def process_client_request(self):
         client_message = self.receive_message()
@@ -294,24 +298,7 @@ class ClientWorker(Thread):
 
         self.send_message(response)
 
-    def receive_message(self, max_length: int = 1024):
-        msg = self.__client_socket.recv(max_length).decode("UTF-8")
-        print(f"""RECV>> {msg}""")
-        return msg
 
-    def send_message(self, msg: str):
-        self.display_message(f"""SEND>> {msg}""")
-        self.__client_socket.send(msg.encode("UTF-8"))
-
-    def display_message(self, msg: str):
-        print(f"""CW >> {msg}""")
-
-    # endregion
-
-
-# endregion
-
-# region ServerApp
 
 if __name__ == "__main__":
     keep_running = True
@@ -334,4 +321,3 @@ if __name__ == "__main__":
         else:
             print("Invalid option, try again \n\n")
 
-# endregion

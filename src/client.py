@@ -1,5 +1,3 @@
-# region Client
-
 import socket
 import time
 from serverworker import ServerWorker
@@ -13,8 +11,6 @@ class Client:
         self.__connected = False
         self.__signedIn = False
         self.__user_username = None
-
-    # region Getters and Setters
 
     @property
     def ip(self):
@@ -36,9 +32,6 @@ class Client:
     def username_of_user(self):
         return self.__user_username
 
-    # endregion
-
-    # region Methods
 
     def connect(self):
         # Connect to the server
@@ -109,6 +102,7 @@ class Client:
             userInput_username = input("Input username: ")
             userInput_pw = input("Input password: ")
             userInput_email = input("Input email address: ")
+
             self.send_message(f"USR|{userInput_username}|{userInput_pw}|{userInput_email}")
             response = self.receive_message()
             arguments = response.split("|")
@@ -148,12 +142,6 @@ class Client:
                 "Please select an option: "
         return int(input(cMenu))
 
-    # endregion
-
-
-# endregion
-
-# region ClientApp
 
 if __name__ == "__main__":
     keep_running = True
@@ -208,4 +196,3 @@ if __name__ == "__main__":
         except ValueError:
             print("Error: Invalid Input - Data Type")
 
-# endregion
