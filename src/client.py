@@ -10,9 +10,9 @@ class Client:
         self.__port = port
         self.__client_socket = None
         self.__server_worker = None
-        self.__is_connected = False
-        self.__is_logged_in = False
-        self.__username_of_user = None
+        self.__connected = False
+        self.__signedIn = False
+        self.__user_username = None
 
     # region Getters and Setters
 
@@ -34,7 +34,7 @@ class Client:
 
     @property
     def username_of_user(self):
-        return self.__username_of_user
+        return self.__user_username
 
     # endregion
 
@@ -44,7 +44,7 @@ class Client:
         # Connect to the server
         self.__client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__client_socket.connect((self.__ip, self.__port))
-        self.__is_connected = True
+        self.__connected = True
 
         # ------------------------- POSSIBLE CHANGES HERE FOR LATER -------------------------
         # LET'S CHANGE THIS LATER TO GENERATE A RANDOM NUMBER BETWEEN 10,000 - 60,000 for port #
@@ -69,8 +69,8 @@ class Client:
         except socket.error as se:
             print(f"0|{se}")
 
-        self.__is_connected = False
-        self.__is_logged_in = False
+        self.__connected = False
+        self.__signedIn = False
 
     def send_message(self, msg: str):
         self.__client_socket.send(msg.encode("UTF-8"))
@@ -86,7 +86,7 @@ class Client:
             print("No new messages.")
 
     def sign_in_user(self):
-        if self.__is_connected:
+        if self.__connected:
             sign_in_username = input("Username: ")
             sign_in_password = input("Password: ")
 
@@ -95,8 +95,8 @@ class Client:
             arguments = response.split("|")
             if arguments[0] == "0":
                 print("Signed in successfully.")
-                self.__is_logged_in = True
-                self.__username_of_user = sign_in_username
+                self.__signedIn = True
+                self.__user_username = sign_in_username
             elif arguments[0] == "1":
                 print("Invalid credentials. Please try again")
             elif arguments[0] == "2":
@@ -105,17 +105,17 @@ class Client:
             print("The client is not connected to a server!")
 
     def sign_up_user(self):
-        if self.__is_connected:
-            sign_up_username = input("Input username: ")
-            sign_up_password = input("Input password: ")
-            sign_up_phone = input("Input phone number: ")
-            self.send_message(f"USR|{sign_up_username}|{sign_up_password}|{sign_up_phone}")
+        if self.__connected:
+            userInput_username = input("Input username: ")
+            userInput_pw = input("Input password: ")
+            userInput_email = input("Input email address: ")
+            self.send_message(f"USR|{userInput_username}|{userInput_pw}|{userInput_email}")
             response = self.receive_message()
             arguments = response.split("|")
 
             if arguments[0] == "0":
                 print("SUCCESS: User added to system")
-                self.__is_logged_in = True
+                self.__signedIn = True
             elif arguments[0] == "1":
                 print(f"{arguments[1]}")
 
@@ -124,7 +124,7 @@ class Client:
             print("ERROR: Client not connected to server. Please connect before attempting to sign in.")
 
     def send_message_to_user(self):
-        if self.__is_connected and self.__is_logged_in:
+        if self.__connected and self.__signedIn:
             username_to_send = input("Recipient username: ")
             message = input("Message: ")
             self.send_message(f"MSG|{self.username_of_user}|{username_to_send}|{message}")
