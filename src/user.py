@@ -1,8 +1,14 @@
+# region User
+
 class User:
-    def __init__(self, email: str, password: str, username: str):
-        self.email = email
+    """Stores user data"""
+
+    def __init__(self, username: str, password: str, phone: str):
         self.__username = username
         self.__password = password
+        self.__phone = phone
+
+    # region Getters and Setters
 
     @property
     def username(self):
@@ -14,22 +20,25 @@ class User:
 
     @property
     def phone(self):
-        return self.__email
+        return self.__phone
 
     @phone.setter
     def phone(self, phone: str):
-        self.__email = email
+        self.__phone = phone
 
     @property
     def password(self):
         return self.__password
 
-    def __str__(self):
-        return f'EMAIL: {self.email}|PASSWORD: {self.password}|USERNAME: {self.username}'
+    # endregion
 
-    # Leave in case __str__ method doesn't print correctly
+    def __str__(self):
+        return f'USERNAME: {self.username}|PASSWORD: {self.password}|PHONE: {self.phone}'
+
     def __repr__(self):
-        return f'EMAIL: {self.email}|PASSWORD: {self.password}|USERNAME: {self.username}'
+        return f'USERNAME: {self.username}|PASSWORD: {self.password}|PHONE: {self.phone}'
 
     def __eq__(self, other):
         return self.username is other.username
+
+# endregion

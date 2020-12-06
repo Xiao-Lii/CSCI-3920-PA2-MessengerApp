@@ -1,15 +1,19 @@
 # region Server
 
+# from clientworker import ClientWorker
 from threading import Thread
 import socket
-import queue
+from database import Database
+from user import User
+from background_clientworker import BackgroundClientWorker
 import json
-from Database import Database
-from bg_clientworker import BackgroundClientWorker
-from User import User
+import queue
 from message import Message
 
+
 class Server(Thread):
+    """Server main thread"""
+
     def __init__(self, ip: str, port: int, backlog: int):
         super().__init__()
         self.__ip = ip
@@ -26,14 +30,6 @@ class Server(Thread):
     # region Getters and setters
 
     @property
-    def keep_running(self):
-        return self.__keep_running
-
-    @keep_running.setter
-    def keep_running(self, status: bool):
-        self.__keep_running = status
-
-    @property
     def database(self):
         return self.__database
 
@@ -41,26 +37,46 @@ class Server(Thread):
     def list_of_cw(self):
         return self.__list_of_cw
 
+    @property
+    def keep_running(self):
+        return self.__keep_running
+
+    @keep_running.setter
+    def keep_running(self, status: bool):
+        self.__keep_running = status
+
     # endregion
 
     # region Methods
-
-    def display_menu(self):
-        service_menu =  "--- Server Main Menu ---\n" \
-                        "1. Load data from file.\n" \
-                        "2. Start the messenger service\n" \
-                        "3. Stop the messenger service\n" \
-                        "4. Save data to file\n" \
-                        "Please select an option\n"
-        print(service_menu)
-        return int(input())
 
     def terminate_server(self):
         self.__keep_running = False
         self.__server_socket.close()
 
+    def run(self):
+        self.__server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.__server_socket.bind((self.__ip, self.__port))
+        self.__server_socket.listen()
+
+        while self.__keep_running:
+            print(f"""[SRV] Waiting for a client connection""")
+            try:
+                self.__client_socket, client_address = self.__server_socket.accept()
+                self.__connection_count += 1
+                print(f"""[SRV] Got a connection from {client_address}""")
+                cw = ClientWorker(self.__connection_count, self.__client_socket, self.__database, self)
+                self.__list_of_cw.append(cw)
+                cw.start()
+            except Exception as e:
+                print(e)
+
+        cw: ClientWorker
+        for cw in self.__list_of_cw:
+            cw.terminate_connection()
+            cw.join()
+
     def load_from_file(self):
-        filename = input("Enter the name of the file you'd like to load (Please do no indicate file type)>")
+        filename = input("Enter the name of the file you'd like to load (no file extension)>")
         try:
             with open(f"{filename}.json", "r") as database_file:
                 database_dict = json.load(database_file)
@@ -70,13 +86,11 @@ class Server(Thread):
 
         users_list = []
         for user_dict in database_dict["user_dict"]:
-            user = User(user_dict.get("_User__email"), user_dict.get("_User__password"),
-                        user_dict.get("_User__username"))
+            user = User(user_dict.get("_User__username"), user_dict.get("_User__password"),
+                        user_dict.get("_User__phone"))
             users_list.append(user)
 
-        # ------------ CHECK OUT MESSAGE QUEUE LATER --------------
-        # UNSURE IF THIS PORTION IS WORKING CORRECTLY
-        msg_queue = queue.Queue
+        messages_queue = queue.Queue
         for message_dict in database_dict["messages_dict"]:
             user_from_dict = message_dict["_Message__user_from"]
             user_to_dict = message_dict["_Message__user_to"]
@@ -85,26 +99,23 @@ class Server(Thread):
             user_to = User(user_to_dict.get("_User__username"), user_to_dict.get("_User__password"),
                            user_to_dict.get("_User__phone"))
             message_to_put = Message(user_from, user_to, message_dict.get("_Message__content"))
-            msg_queue.put(message_to_put)
+            messages_queue.put(message_to_put)
 
-        # ------------ CHECK OUT NOTIFICATION QUEUE LATER --------------
-        # UNSURE IF THIS PORTION IS WORKING CORRECTLY
         notification_queue = queue.Queue
         for notification_dict in database_dict["notifications_dict"]:
             user_from_dict = notification_dict["_Message__user_from"]
             user_to_dict = notification_dict["_Message__user_to"]
             user_from = User(user_from_dict.get("_User__username"), user_from_dict.get("_User__password"),
                              user_from_dict.get("_User__phone"))
-            user_to = User(user_to_dict.get("_User__email"), user_to_dict.get("_User__password"),
-                           user_to_dict.get("_User__username"))
+            user_to = User(user_to_dict.get("_User__username"), user_to_dict.get("_User__password"),
+                           user_to_dict.get("_User__phone"))
             message_to_put = Message(user_from, user_to, notification_dict.get("_Message__content"))
-            msg_queue.put(message_to_put)
+            messages_queue.put(message_to_put)
 
-        self.__database = Database(users_list, msg_queue, notification_queue)
+        self.__database = Database(users_list, messages_queue, notification_queue)
 
     def save_to_file(self):
         database_dict = {"user_dict": [], "messages_dict": [], "notifications_dict": []}
-
         for user in self.__database.users:
             serialized_user = user.__dict__
             database_dict["user_dict"].append(serialized_user)
@@ -124,30 +135,24 @@ class Server(Thread):
         except Exception as e:
             print(e)
 
-    def run(self):
-        self.__server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.__server_socket.bind((self.__ip, self.__port))
-        self.__server_socket.listen()
+    def display_menu(self):
+        service_menu =  "--- Server Main Menu ---\n" \
+                        "1. Load data from file.\n" \
+                        "2. Start the messenger service\n" \
+                        "3. Stop the messenger service\n" \
+                        "4. Save data to file\n" \
+                        "Please select an option: \n"
+        return int(input(service_menu))
 
-        while self.__keep_running:
-            print(f"""[SRV] Waiting for a client connection""")
-            try:
-                self.__client_socket, client_address = self.__server_socket.accept()
-                self.__connection_count += 1
-                print(f"""[SRV] Got a connection from {client_address}""")
-                clientWorker = ClientWorker(self.__connection_count, self.__client_socket, self.__database, self)
-                self.__list_of_cw.append(clientWorker)
-                clientWorker.start()
-            except Exception as error:
-                print(error)
+    # endregion
 
-        clientWorker: ClientWorker
-        for clientWorker in self.__list_of_cw:
-            clientWorker.terminate_connection()
-            clientWorker.join()
 
-"""The ClientWorker will create threads to listen to any client requests such as sending a message"""
+# endregion
+
+# region ClientWorker
 class ClientWorker(Thread):
+    """Threads that listen to client requests."""
+
     def __init__(self, client_id: int, client_socket: socket, database: Database, server: Server):
         super().__init__()
         self.__id = client_id
@@ -314,9 +319,10 @@ class ClientWorker(Thread):
 
     # endregion
 
+
 # endregion
 
-# region - Main for ServerApp
+# region ServerApp
 
 if __name__ == "__main__":
     keep_running = True

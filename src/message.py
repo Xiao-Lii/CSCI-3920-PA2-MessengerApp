@@ -1,6 +1,6 @@
 # region Message
 
-from User import User
+from user import User
 
 
 class Message:
