@@ -1,13 +1,9 @@
 # region Client
 
-from serverworker import ServerWorker
 import socket
-import random
-
+from serverworker import ServerWorker
 
 class Client:
-    """The main client thread"""
-
     def __init__(self, ip: str = None, port: int = None):
         self.__ip = ip
         self.__port = port
@@ -49,8 +45,11 @@ class Client:
         self.__client_socket.connect((self.__ip, self.__port))
         self.__is_connected = True
 
-        # xGenerate a random port number and instatiate a background thread with a socket listening to the random port
+        # ------------------------- POSSIBLE CHANGES HERE FOR LATER -------------------------
+        # LET'S CHANGE THIS LATER TO GENERATE A RANDOM NUMBER BETWEEN 10,000 - 60,000 for port
         port = int(input("Please enter a port for the server to connect to>"))
+        # ------------------------- POSSIBLE CHANGES HERE FOR LATER -------------------------
+
         self.__server_worker = ServerWorker(port)
         self.__server_worker.start()
         self.send_message(f"""PORT|{str(port)}""")
@@ -156,30 +155,42 @@ if __name__ == "__main__":
 
     while keep_running:
         option = client.display_menu()
+
+        # Option 1 = Connect to Server
         if option == 1:
-            #client.ip = input("IP Address>")
             client.ip = "localhost"
-            #client.port = int(input("Port>"))
             client.port = 10000
 
             client.connect()
             print(client.receive_message())
+
+        # Option 2 - Login to Messenger App
         elif option == 2:
             print("1. Login existing user.\n"
                   "2. Sign up new user.\n"
                   "Please enter an option: ")
             login_option = int(input())
+
+            # SubOption 1 = Login an existing user
             if login_option == 1:
                 client.sign_in_user()
+            # SubOption 2 = Sign up a new user
             elif login_option == 2:
                 client.sign_up_user()
+
+        # Option 3 - Send a Message
         elif option == 3:
             client.send_message_to_user()
+
+        # Option 4 - Check for Received Messages
         elif option == 4:
             client.print_received()
+
+        # Option 5 - Disconnect Client
         elif option == 5:
             client.disconnect()
             keep_running = False
+
         else:
             print("Invalid option, try again \n\n")
 
