@@ -1,6 +1,8 @@
+# region Database
+
+from user import User
+from message import Message
 import queue
-from User import User
-from Message import Message
 
 class Database:
     """Stores the messages and users."""
@@ -23,6 +25,7 @@ class Database:
         else:
             self.__outgoing_notifications = outgoing_notifications
 
+    # region Getters
 
     @property
     def users(self):
@@ -36,6 +39,7 @@ class Database:
     def outgoing_notifications(self):
         return self.__outgoing_notifications
 
+    # endregion
 
     # region Methods
 

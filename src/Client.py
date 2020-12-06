@@ -131,9 +131,8 @@ class Client:
                 "3. Send Message\n" \
                 "4. Print Received Messages\n" \
                 "5. Disconnect\n" \
-                "Please select an option"
-        print(cMenu)
-        return int(input())
+                "Please select an option: "
+        return int(input(cMenu))
 
 
 if __name__ == "__main__":
@@ -142,45 +141,29 @@ if __name__ == "__main__":
 
     while keep_running:
         option = client.display_menu()
-
-        # Option 1 = Connect to Server
         if option == 1:
-            # ---------- MAY NEED TO COME BACK TO FIX THIS --------------
             #client.ip = input("IP Address>")
             client.ip = "localhost"
+            #client.port = int(input("Port>"))
+            client.port = 10000
 
-            client.port = int(input("Port>"))
             client.connect()
             print(client.receive_message())
-            keep_running = True
-
-        # Option 2 - Login to Messenger App
         elif option == 2:
-            print("1. Login existing user\n"
-                  "2. Sign up new user\n"
-                  "Please select an option")
+            print("1. Login existing user.\n"
+                  "2. Sign up new user.\n"
+                  "Please enter an option: ")
             login_option = int(input())
-
-            # Suboption 1 = Login an existing user
             if login_option == 1:
                 client.sign_in_user()
-            # Suboption 2 = Sign up a new user
             elif login_option == 2:
                 client.sign_up_user()
-
-        # Option 3 - Send a Message
         elif option == 3:
             client.send_message_to_user()
-
-        # Option 4 - Check for Received Messages
         elif option == 4:
             client.print_received()
-
-        # Option 5 - Disconnect Client
         elif option == 5:
             client.disconnect()
             keep_running = False
-
-        # Error - Invalid Option
         else:
             print("Invalid option, try again \n\n")

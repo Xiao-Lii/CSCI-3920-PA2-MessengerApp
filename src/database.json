@@ -1,5 +1,5 @@
 {
-  "email": ["robin", "sakura", "edward", "user"],
-  "password": ["P0n3glyph", "Salad", "ein1", "pw"],
-  "username": ["hana", "blossom", "shipHacker", "user"]
+  "user_dict": [{"_User__username": "user", "_User__password": "pw", "_User__phone": "1"}],
+  "messages_dict": [],
+  "notifications_dict": []
 }

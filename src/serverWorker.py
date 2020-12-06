@@ -1,15 +1,22 @@
+# region ServerWorker
+
 import socket
+
 from threading import Thread
 
-""" The background thread that the client starts to send / receive messages asynchronous"""
+
 class ServerWorker(Thread):
-    def __init__(self, listening_port: int):
+    """Background thread within the client that allows asynchronous sending and receiving of messages"""
+
+    def __init__(self, port_to_listen: int):
         super().__init__()
-        self.__port = listening_port
+        self.__port = port_to_listen
         self.__server_socket = None
         self.__client_socket = None
         self.__incoming_messages = []
         self.__keep_running = True
+
+    # region Getters and Setters
 
     @property
     def server_socket(self):
@@ -23,6 +30,9 @@ class ServerWorker(Thread):
     def incoming_messages(self):
         return self.__incoming_messages
 
+    # endregion
+
+    # region Methods
     def send_message(self, msg: str):
         self.display_message(f"""SEND>> {msg}""")
         self.__client_socket.send(msg.encode("UTF-8"))
@@ -72,3 +82,7 @@ class ServerWorker(Thread):
 
     def terminate_connection(self):
         self.__keep_running = False
+
+    # endregion
+
+# endregion
