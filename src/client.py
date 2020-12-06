@@ -87,8 +87,8 @@ class Client:
 
     def sign_in_user(self):
         if self.__is_connected:
-            sign_in_username = input("Username>")
-            sign_in_password = input("Password>")
+            sign_in_username = input("Username: ")
+            sign_in_password = input("Password: ")
 
             self.send_message(f"LOG|{sign_in_username}|{sign_in_password}")
             response = self.receive_message()
@@ -98,17 +98,17 @@ class Client:
                 self.__is_logged_in = True
                 self.__username_of_user = sign_in_username
             elif arguments[0] == "1":
-                print("Invalid credentials.")
+                print("Invalid credentials. Please try again")
             elif arguments[0] == "2":
-                print("Already Logged in.")
+                print("User is already signed in.")
         else:
             print("The client is not connected to a server!")
 
     def sign_up_user(self):
         if self.__is_connected:
-            sign_up_username = input("Input username>")
-            sign_up_password = input("Input password>")
-            sign_up_phone = input("Input phone number>")
+            sign_up_username = input("Input username: ")
+            sign_up_password = input("Input password: ")
+            sign_up_phone = input("Input phone number: ")
             self.send_message(f"USR|{sign_up_username}|{sign_up_password}|{sign_up_phone}")
             response = self.receive_message()
             arguments = response.split("|")
@@ -136,7 +136,7 @@ class Client:
             elif arguments[0] == "1":
                 print("Error: User isn't signed in or doesn't exist")
             elif arguments[0] == "2":
-                print("Error: Recipient doesn't exist")
+                print("Error: Recipient either doesn't exist or user isn't signed in")
 
     def display_menu(self):
         cMenu = "----- Client Main Menu -----\n" \
