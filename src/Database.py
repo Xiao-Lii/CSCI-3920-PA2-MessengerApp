@@ -1,8 +1,6 @@
-# region Database
-
-from user import User
-from message import Message
 import queue
+from User import User
+from message import Message
 
 class Database:
     """Stores the messages and users."""
@@ -25,7 +23,6 @@ class Database:
         else:
             self.__outgoing_notifications = outgoing_notifications
 
-    # region Getters
 
     @property
     def users(self):
@@ -39,7 +36,6 @@ class Database:
     def outgoing_notifications(self):
         return self.__outgoing_notifications
 
-    # endregion
 
     # region Methods
 
@@ -116,19 +112,6 @@ class Database:
             response = f"""{success}|Notification of relay sent to server."""
 
         return response
-
-    def relay_message_to(self, user_from: User, message_id: int, message: str):
-        pass
-
-    def message_relayed(self, user_from: User, user_to: User, message_id: int):
-        pass
-
-    # We may not need these two methods. Just leave them until we know for sure.
-    def save_to_file(self, filename: str):
-        pass
-
-    def load_from_file(self, filename: str):
-        pass
 
     # endregion
 
