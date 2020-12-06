@@ -1,6 +1,6 @@
 import queue
 from User import User
-from message import Message
+from Message import Message
 
 class Database:
     """Stores the messages and users."""

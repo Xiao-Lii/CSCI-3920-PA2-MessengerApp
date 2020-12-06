@@ -7,7 +7,7 @@ import json
 from Database import Database
 from bg_clientworker import BackgroundClientWorker
 from User import User
-from message import Message
+from Message import Message
 
 class Server(Thread):
     def __init__(self, ip: str, port: int, backlog: int):
