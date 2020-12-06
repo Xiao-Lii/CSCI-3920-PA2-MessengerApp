@@ -1,12 +1,8 @@
-# region ServerWorker
-
 import socket
 from threading import Thread
 
 
 class ServerWorker(Thread):
-    """Background thread within the client that allows asynchronous sending and receiving of messages"""
-
     def __init__(self, port_to_listen: int):
         super().__init__()
         self.__port = port_to_listen
@@ -14,8 +10,6 @@ class ServerWorker(Thread):
         self.__client_socket = None
         self.__incoming_messages = []
         self.__keep_running = True
-
-    # region Getters and Setters
 
     @property
     def server_socket(self):
@@ -29,11 +23,8 @@ class ServerWorker(Thread):
     def incoming_messages(self):
         return self.__incoming_messages
 
-    # endregion
-
-    # region Methods
     def send_message(self, msg: str):
-        self.display_message(f"""SEND>> {msg}""")
+        self.display_message(f"""[BG.CW] {msg}""")
         self.__client_socket.send(msg.encode("UTF-8"))
 
     def receive_message(self, max_length: int = 1024):
@@ -69,10 +60,13 @@ class ServerWorker(Thread):
     def run(self):
         self.__server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__server_socket.bind(("localhost", self.__port))
+
+        # Standby for incoming Connections
         self.display_message("[STANDBY] Listening for connections")
+
         self.__server_socket.listen(1)
         self.__client_socket, client_address = self.__server_socket.accept()
-        self.display_message(f"""Got a connection from {client_address}""")
+        self.display_message(f"""Received connection from {client_address}""")
 
         while self.__keep_running:
             self.process_server_request()
@@ -81,7 +75,3 @@ class ServerWorker(Thread):
 
     def terminate_connection(self):
         self.__keep_running = False
-
-    # endregion
-
-# endregion
