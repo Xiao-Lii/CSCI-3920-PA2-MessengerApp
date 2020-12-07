@@ -4,6 +4,7 @@ from serverWorker import ServerWorker
 
 
 class Client:
+    """Our client class is responsible for establishing the main thread between the client and server"""
     def __init__(self, ip: str = None, port: int = None):
         self.__ip = ip
         self.__port = port
@@ -34,7 +35,8 @@ class Client:
         return self.__user_username
 
     def connect(self):
-        """ Connects to the server"""
+        """ Connects the client to the main server of our messenger app, will also prompt the client to establish a
+        unique/unused port # for the server / other clients to reach out to"""
         self.__client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__client_socket.connect((self.__ip, self.__port))
         self.__connected = True
@@ -51,6 +53,7 @@ class Client:
         self.send_message(f"""PORT|{str(port)}""")
 
     def disconnect(self):
+        """ Connects the client to the main server of our messenger app"""
         self.send_message("QUIT|DISCONNECT")
         response = self.receive_message()
 

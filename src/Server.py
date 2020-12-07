@@ -50,6 +50,8 @@ class Server(Thread):
         self.__server_socket.close()
 
     def run(self):
+        """For starting and running the server, establishes port and continuously waits for a new client connections"""
+
         self.__server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__server_socket.bind((self.__ip, self.__port))
         self.__server_socket.listen()
@@ -72,7 +74,11 @@ class Server(Thread):
             cw.join()
 
     def load_from_file(self):
-        """loads .json file"""
+        """Reads in a database that are a .json file type and loads in:
+                1st List = List of User Info
+                2nd List = List of Messages to Send
+                3rd List = List of Banners to display received msgs"""
+
         filename = input("Filename w/o file type extension (.json files only): ")
         try:
             with open(f"{filename}.json", "r") as database_file:
@@ -82,15 +88,17 @@ class Server(Thread):
             print(fe)
             return
 
+        #
         users_list = []
         for user_info in database_list["user_list"]:
+            # Loading up Users for Database
             user = User(user_info.get("_User__username"), user_info.get("_User__password"),
                         user_info.get("_User__email"))
             users_list.append(user)
 
-        messages_queue = queue.Queue
+        msg_list = queue.Queue
         for message_in_queue in database_list["message_list"]:
-            # Loading up Messages in Queue for Sender and Receivers
+            # Loading up Messages for Sender and Receivers
             sending_user_msgs = message_in_queue["_Message__user_from"]
             receiving_user_msgs = message_in_queue["_Message__user_to"]
 
@@ -102,11 +110,11 @@ class Server(Thread):
 
             # Assembling Message to be sent with data collected
             message_to_put = Message(sender, recipient, message_in_queue.get("_Message__content"))
-            messages_queue.put(message_to_put)
+            msg_list.put(message_to_put)
 
-        notification_queue = queue.Queue
+        banner_list = queue.Queue
         for notification_list in database_list["notification_list"]:
-            # Loading up Notications for Messages in Queue for Sender and Receivers
+            # Loading up Notications for Messages for Sender and Receivers
             sending_user_msgs = notification_list["_Message__user_from"]
             receiving_user_msgs = notification_list["_Message__user_to"]
 
@@ -118,9 +126,9 @@ class Server(Thread):
 
             # Assembling Notification Message to be sent with data collected
             message_to_put = Message(sender, recipient, notification_list.get("_Message__content"))
-            messages_queue.put(message_to_put)
+            msg_list.put(message_to_put)
 
-        self.__database = Database(users_list, messages_queue, notification_queue)
+        self.__database = Database(users_list, msg_list, banner_list)
 
     def save_to_file(self):
         database_list = {"user_list": [], "message_list": [], "notification_list": []}
@@ -137,15 +145,15 @@ class Server(Thread):
             database_list["message_list"].append(serialized_message)
 
         # Iterates through all notifications to append to our database
-        for notification in list(self.__database.outgoing_notifications.queue):
+        for notification in list(self.__database.outgoing_banners.queue):
             serialized_notification = {"id": notification.id, "user_to": {notification.user_to.__dict__},
                                        "user_from": {notification.user_from.__dict__}, "content": notification.content}
             database_list["message_list"].append(serialized_notification)
 
         # Prompts the user for the filename to save/write into
-        filename = input("Filename w/o file type extension (.json files only): ")
+        file = input("Filename w/o file type extension (.json files only): ")
         try:
-            with open(f'{filename}.json', 'w') as database_file:
+            with open(f'{file}.json', 'w') as database_file:
                 json.dump(database_list, database_file)
 
         # Error Handling: Issues with Writing/Saving to File
@@ -153,6 +161,7 @@ class Server(Thread):
             print(error)
 
     def display_menu(self):
+        """Displays the main menu of server options"""
         service_menu = "----- Server Main Menu -----\n" \
                        "1. Load data from file.\n" \
                        "2. Start the messenger service\n" \
@@ -162,10 +171,10 @@ class Server(Thread):
         return int(input(service_menu))
 
 
-"""ClientWorker will listen for Client Requests"""
-
-
 class ClientWorker(Thread):
+    """ClientWorker will listen for Client Requests such as signing in, creating an account, sending messages,
+    receiving message, displaying any received messages, and disconnecting the client from the server"""
+
     def __init__(self, client_id: int, client_socket: socket, database: Database, server: Server):
         super().__init__()
         self.__id = client_id
@@ -225,15 +234,16 @@ class ClientWorker(Thread):
         self.__keep_clientRunning = state
 
     def connect_to_bg_client(self, port):
+        """This connects the client to their own background client worker"""
         self.__background_client_worker.client_socket = self.__client_socket
         self.__background_client_worker.database = self.__database
         self.__background_client_worker.port = port
         self.__background_client_worker.start()
 
     def terminate_connection(self):
+        """Disconnects the user/client from the server"""
         self.__keep_clientRunning = False
         self.__background_client_worker.terminate_connection()
-
         return "0|OK"
 
     def send_message(self, msg: str):
@@ -249,6 +259,8 @@ class ClientWorker(Thread):
         print(f"""[CW] {msg}""")
 
     def sign_in_user(self, username: str, password: str):
+        """Attempts to sign the user by checking if username/email exists within the database, returning errors if
+        otherwise"""
         user: User
         signed_in = False
         cw: ClientWorker
@@ -291,6 +303,8 @@ class ClientWorker(Thread):
         pass
 
     def run(self):
+        """Our Run program for the client worker, this is responsible for maintaining the client connection unless
+        otherwise requested"""
         self.display_message("SUCCESS: Connected to Client. Attempting connection to client background thread")
         for user in self.__database.users:
             print(user)
@@ -303,6 +317,7 @@ class ClientWorker(Thread):
                 self.__server.list_of_connected_clients.remove(client)
 
     def process_client_request(self):
+        """Delimits the client request and properly categorizes the request of the user into their desire parameters"""
         client_message = self.receive_message()
         self.display_message(f"""[CLIENT] {client_message}""")
 
@@ -336,7 +351,7 @@ if __name__ == "__main__":
 
     while keep_running:
         # Sometimes the menu displays before responses are displayed
-        # One second delay to display menu
+        # One second delay to display menu after receiving server/worker responses
         time.sleep(1)
         option = server.display_menu()
         if option == 1:

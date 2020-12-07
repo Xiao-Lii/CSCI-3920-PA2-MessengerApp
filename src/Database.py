@@ -4,6 +4,7 @@ import queue
 
 
 class Database:
+    """Our database which is responsible for holding our list of users, messages, and banners to display to the user"""
     def __init__(self, users=None, sending_messages=None, sending_banners=None):
         # Initializing if no users exists
         if users is None:
@@ -40,13 +41,14 @@ class Database:
         return self.__sending_messages
 
     @property
-    def outgoing_notifications(self):
+    def outgoing_banners(self):
         return self.__sending_banners
 
     # NEED TO DOUBLE CHECK THIS PART, DATABASE IS ALLOWING 2 USERS TO SIGN UP WITH THE SAME EMAIL / USERNAME
     # ACTUALLY THIS PORTION MAY BE FIXED NOW - LEE
     def sign_up_user(self, username: str, password: str, email: str):
-        """checks if the username and email is not in database to prevent multiple same accounts"""
+        """Creates and adds a user account to the database as long as the email or username hasn't already been
+        created"""
         check = True
         response = ""
 
@@ -70,6 +72,8 @@ class Database:
         return response
 
     def send_message(self, name_from: str, name_to: str, message: str):
+        """Processes and sends messages between users, requiring a user signed in as the sender to another existing
+        account"""
         sender_found = False
         recipient_found = False
         sending_user = None
@@ -83,7 +87,7 @@ class Database:
                 sending_user = user
                 break
             else:
-                response = f"""1|no source user"""
+                response = f"""1|Sender doesn't exist"""
         # Verify that recipient exists in database
         for user in self.__users:
             if name_to == user.username:
@@ -91,7 +95,7 @@ class Database:
                 receiving_user = user
                 break
             else:
-                response = f"""2|no target user"""
+                response = f"""2|Receiver doesn't exist"""
 
         # If Sender and recipient are valid, add message to message queue
         if recipient_found and sender_found:
@@ -102,6 +106,9 @@ class Database:
         return response
 
     def send_banner(self, user_from: User, user_to: User, message_id: str):
+        """We want our users to know when they signed in if they've received a message while they were offline and
+        should print/display at the top of their screen upon a successful sign in. This will verify the sender and
+        receiver are valid users in the database"""
         check = 0
         response = ''
 

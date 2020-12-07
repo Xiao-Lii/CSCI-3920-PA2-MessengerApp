@@ -34,6 +34,7 @@ class ServerWorker(Thread):
         print(f"""[BG.CLIENT] {msg}""")
 
     def process_server_request(self):
+        """Processes server requests by the client"""
         server_message = self.receive_message()
         self.display_message(f"""[SERVER NOTIFICATION] {server_message}""")
 
@@ -58,6 +59,8 @@ class ServerWorker(Thread):
         self.send_message(response)
 
     def run(self):
+        """This will run evertime our client establishes a connection with the server, so that others can connect to
+        the client by sending messages"""
         self.__server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__server_socket.bind(("localhost", self.__port))
 

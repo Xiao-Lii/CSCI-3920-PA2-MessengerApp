@@ -6,6 +6,7 @@ from User import User
 
 
 class BackgroundClientWorker(Thread):
+    """Our background client worker for our client"""
     def __init__(self, client_socket: socket = None, database:Database = None, user: User = None, port: int = None):
         super().__init__()
         self.__client_socket = client_socket
@@ -81,24 +82,27 @@ class BackgroundClientWorker(Thread):
         """Check if no list for messages exist"""
         if not list(self.__database.outgoing_messages.queue):
             pass
-        elif list(self.__database.outgoing_messages.queue)[-1].user_to is self.__user:
+        elif list(self.__database.outgoing_messages.queue)[-1].receiver is self.__user:
             msg_info = self.__database.outgoing_messages.get()
-            message = f"""R|{msg_info.user_from.username}|{msg_info.id}|{msg_info.content}"""
+            message = f"""R|{msg_info.sender.username}|{msg_info.id}|{msg_info.content}"""
 
             self.send_message(message)
             self.display_message(self.receive_message())
-            self.display_message(self.__database.send_banner(msg_info.user_from, msg_info.user_to,
+            self.display_message(self.__database.send_banner(msg_info.sender, msg_info.receiver,
                                                              msg_info.id))
 
-        if not list(self.__database.outgoing_notifications.queue):
+        if not list(self.__database.outgoing_banners.queue):
             pass
-        elif list(self.__database.outgoing_notifications.queue)[-1].user_from is self.__user:
-            msg_info = self.__database.outgoing_notifications.get()
-            message = f"""OK|{msg_info.user_from.username}|{msg_info.user_to.username}|{msg_info.content}"""
+        elif list(self.__database.outgoing_banners.queue)[-1].sender is self.__user:
+            msg_info = self.__database.outgoing_banners.get()
+            message = f"""OK|{msg_info.sender.username}|{msg_info.receiver.username}|{msg_info.content}"""
             self.send_message(message)
             self.display_message(self.receive_message())
 
     def run(self):
+        """Our running program for background client worker, this will establish a socket and thread to listen
+        to client requests such as viewing any messages or to disconnect/terminate"""
+
         self.display_message("SUCCESS: Connected to Client. Attempting connection to client background thread")
 
         while True:
@@ -116,5 +120,6 @@ class BackgroundClientWorker(Thread):
         self.__server_socket.close()
 
     def terminate_connection(self):
+        """Sends request to close connection to server and disconnect bg client worker"""
         self.send_message("OUT|OK")
         self.__keep_clientRunning = False
