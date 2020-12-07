@@ -6,7 +6,7 @@ from User import User
 
 
 class BackgroundClientWorker(Thread):
-    def __init__(self, client_socket:socket = None, database:Database = None, user:User = None, port:int = None):
+    def __init__(self, client_socket: socket = None, database:Database = None, user: User = None, port: int = None):
         super().__init__()
         self.__client_socket = client_socket
         self.__server_socket = None
@@ -78,7 +78,7 @@ class BackgroundClientWorker(Thread):
         print(f"""[BGCW] {msg}""")
 
     def check_for_messages(self):
-        # Check if no list for messages exist
+        """Check if no list for messages exist"""
         if not list(self.__database.outgoing_messages.queue):
             pass
         elif list(self.__database.outgoing_messages.queue)[-1].user_to is self.__user:
