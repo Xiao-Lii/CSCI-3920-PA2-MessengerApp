@@ -1,6 +1,6 @@
 """Store user's account information: username, password, and email"""
 class User:
-    def __init__(self, username: str, password: str, email: str):
+    def __init__(self, username:str, password:str, email:str):
         self.__username = username
         self.__password = password
         self.__email = email

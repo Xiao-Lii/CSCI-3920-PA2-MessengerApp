@@ -2,8 +2,9 @@ from user import User
 from message import Message
 import queue
 
+
 class Database:
-    def __init__(self, users=None, outgoing_messages=None, outgoing_notifications=None):
+    def __init__(self, users = None, outgoing_messages = None, outgoing_notifications = None):
         # Initializing if no users exists
         if users is None:
             self.__users = []
@@ -42,40 +43,42 @@ class Database:
 
 
     # NEED TO DOUBLE CHECK THIS PART, DATABASE IS ALLOWING 2 USERS TO SIGN UP WITH THE SAME EMAIL / USERNAME
-    def sign_up_user(self, username: str, password: str, email: str):
+    def sign_up_user(self, username:str, password:str, email:str):
         success = True
         response = ""
 
         # Verify that User Email is not already in database
         for user in self.__users:
-            if username is user.username:
+            #if username is user.username:
+            if username == user.username or email == user.email:
                 success = False
-                response = "1|A user with this username already exists."
+                response = "1|ERROR: A user with either this username or email already exists"
                 break
 
-        # if we didn't already find a user, create a new user and add it to the list.
+        # If username and email weren't found as already used in database's list of users
+        # Continue to add user to database
         if success:
             user_to_add = User(username, password, email)
             self.__users.append(user_to_add)
             response = "0|SUCCESS"
 
-        print("List of users:")
+        print("Database List of Users:")
         for user in self.__users:
             print(user)
         return response
 
-    def send_message(self, name_from: str, name_to: str, message: str):
+    def send_message(self, name_from:str, name_to:str, message:str):
         sender_found = False
         recipient_found = False
-        user_obj_from = None
-        user_obj_to = None
+        sending_user = None
+        receiving_user = None
         response = ''
 
         # Verify that sender exists in database
         for user in self.__users:
             if name_from == user.username:
                 sender_found = True
-                user_obj_from = user
+                sending_user = user
                 break
             else:
                 response = f"""1|no source user"""
@@ -83,35 +86,37 @@ class Database:
         for user in self.__users:
             if name_to == user.username:
                 recipient_found = True
-                user_obj_to = user
+                receiving_user = user
                 break
             else:
                 response = f"""2|no target user"""
 
         # If Sender and recipient are valid, add message to message queue
         if recipient_found and sender_found:
-            message_to_send = Message(user_obj_from, user_obj_to, message)
+            message_to_send = Message(sending_user, receiving_user, message)
             self.__outgoing_messages.put(message_to_send)
             response = f"""0|{message_to_send.id}"""
 
         return response
 
-    def send_notification(self, user_from: User, user_to: User, message_id: str):
+    def send_notification(self, user_from:User, user_to:User, message_id:str):
         success = 0
         response = ''
 
         # Verify that recipient exists in database
         if user_from not in self.__users:
             success = 1
-            response = f"""{success}|no source user"""
+            response = f"""{success}|ERROR: Recipient doesn't exist"""
+
         # Verify that sender exists in database
         elif user_to not in self.__users:
             success = 2
-            response = f"""{success}|no target user"""
+            response = f"""{success}|ERROR: Sender doesn't exist"""
+
         # If both are in database, add to our notification queue
         if success == 0:
             message_to_send = Message(user_from, user_to, message_id)
             self.__outgoing_notifications.put(message_to_send)
-            response = f"""{success}|Notification of relay sent to server."""
+            response = f"""{success}|[NOTIFICATION] Sent to server"""
 
         return response

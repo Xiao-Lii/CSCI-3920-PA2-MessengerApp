@@ -1,5 +1,3 @@
-# region Client
-
 import socket
 import time
 from serverworker import ServerWorker
@@ -13,8 +11,6 @@ class Client:
         self.__connected = False
         self.__signedIn = False
         self.__user_username = None
-
-    # region Getters and Setters
 
     @property
     def ip(self):
@@ -33,12 +29,9 @@ class Client:
         self.__port = port
 
     @property
-    def username_of_user(self):
+    def sender_username(self):
         return self.__user_username
 
-    # endregion
-
-    # region Methods
 
     def connect(self):
         # Connect to the server
@@ -46,17 +39,19 @@ class Client:
         self.__client_socket.connect((self.__ip, self.__port))
         self.__connected = True
 
-        # ------------------------- POSSIBLE CHANGES HERE FOR LATER -------------------------
-        # LET'S CHANGE THIS LATER TO GENERATE A RANDOM NUMBER BETWEEN 10,000 - 60,000 for port #
+        # ------------------------- POSSIBLE THOUGHTS FOR CHANGES HERE -------------------------
+        # THOUGHT ABOUT CHANGING THIS TO GENERATE A RANDOM NUMBER FOR PORT # BUT CAUSES ISSUES
+        # ISSUES WITH FORMATTING AND KEEPING IT WITHIN A RANGE, ALSO NO GUARANTEE THAT ANOTHER APP
+        # IS ALREADY USING THE PORT #
         port = int(input("Please enter a unused port # for the server to connect to: "))
-        # ------------------------- POSSIBLE CHANGES HERE FOR LATER -------------------------
+        # ------------------------- POSSIBLE THOUGHTS FOR CHANGES HERE -------------------------
 
         self.__server_worker = ServerWorker(port)
         self.__server_worker.start()
         self.send_message(f"""PORT|{str(port)}""")
 
     def disconnect(self):
-        self.send_message("OUT|DISCONNECTED")
+        self.send_message("QUIT|DISCONNECT")
         response = self.receive_message()
         arguments = response.split("|")
         if arguments[0] == "0":
@@ -85,22 +80,30 @@ class Client:
         else:
             print("No new messages.")
 
-    def sign_in_user(self):
+    def login_user(self):
         if self.__connected:
             sign_in_username = input("Username: ")
             sign_in_password = input("Password: ")
 
-            self.send_message(f"LOG|{sign_in_username}|{sign_in_password}")
+            self.send_message(f"LOGIN|{sign_in_username}|{sign_in_password}")
             response = self.receive_message()
             arguments = response.split("|")
+
+            # If User & Password match from Server Database
             if arguments[0] == "0":
                 print("Signed in successfully.")
                 self.__signedIn = True
                 self.__user_username = sign_in_username
+
+            # If User & Password Doesn't match from Server Database
             elif arguments[0] == "1":
-                print("Invalid credentials. Please try again")
+                print("Error: Couldn't sign in user. Please try again")
+
+            # ELIF OPTION DOESN'T APPEAR TO BE WORKING CORRECTLY - MAY NEED TO LOOK AT SERVER - SIGN IN USER METHOD
             elif arguments[0] == "2":
                 print("User is already signed in.")
+
+        # Prompt for the user to connect to the server 1st prior to login
         else:
             print("The client is not connected to a server!")
 
@@ -109,7 +112,8 @@ class Client:
             userInput_username = input("Input username: ")
             userInput_pw = input("Input password: ")
             userInput_email = input("Input email address: ")
-            self.send_message(f"USR|{userInput_username}|{userInput_pw}|{userInput_email}")
+
+            self.send_message(f"ADD|{userInput_username}|{userInput_pw}|{userInput_email}")
             response = self.receive_message()
             arguments = response.split("|")
 
@@ -125,9 +129,9 @@ class Client:
 
     def send_message_to_user(self):
         if self.__connected and self.__signedIn:
-            username_to_send = input("Recipient username: ")
+            recipient_username = input("Recipient username: ")
             message = input("Message: ")
-            self.send_message(f"MSG|{self.username_of_user}|{username_to_send}|{message}")
+            self.send_message(f"MSG|{self.sender_username}|{recipient_username}|{message}")
             response = self.receive_message()
             arguments = response.split("|")
 
@@ -136,7 +140,8 @@ class Client:
             elif arguments[0] == "1":
                 print("Error: User isn't signed in or doesn't exist")
             elif arguments[0] == "2":
-                print("Error: Recipient either doesn't exist or user isn't signed in")
+                print("Error: Recipient either doesn't exist or user isn't signed in\n"
+                      "Note: Upper/Lowercase matters in the instance of Usernames")
 
     def display_menu(self):
         cMenu = "----- Client Main Menu -----\n" \
@@ -148,12 +153,6 @@ class Client:
                 "Please select an option: "
         return int(input(cMenu))
 
-    # endregion
-
-
-# endregion
-
-# region ClientApp
 
 if __name__ == "__main__":
     keep_running = True
@@ -170,19 +169,21 @@ if __name__ == "__main__":
                 client.ip = "localhost"
                 client.port = 10000
                 # In successful connection, system will prompt user for a unique port # to
-                # Want to change prompting the user for a unique port # and just randomly generating it instead
                 client.connect()
+                # Client should receive confirmation of connection established
+                # Print successful connection
                 print(client.receive_message())
 
             # Option 2 - Login to Messenger App
             elif option == 2:
-                login_menu = "1. Login existing user.\n" \
-                             "2. Sign up new user.\n" \
+                login_menu = "----- Login Screen -----\n" \
+                             "1. Login existing user\n" \
+                             "2. Create a new user\n" \
                              "Please enter an option: "
                 login_option = int(input(login_menu))
                 # SubOption 1 = Login an existing user
                 if login_option == 1:
-                    client.sign_in_user()
+                    client.login_user()
                 # SubOption 2 = Sign up a new user
                 elif login_option == 2:
                     client.sign_up_user()
@@ -201,11 +202,10 @@ if __name__ == "__main__":
                 keep_running = False
 
             else:
-                print("Invalid option, try again \n\n")
+                print("Error: Invalid option, try again \n\n")
 
         # In case user-input at menu options is not an integer
         # This will stop the server from crashing unexpectedly
         except ValueError:
             print("Error: Invalid Input - Data Type")
 
-# endregion
