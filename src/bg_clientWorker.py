@@ -86,8 +86,8 @@ class BackgroundClientWorker(Thread):
 
             self.send_message(message)
             self.display_message(self.receive_message())
-            self.display_message(self.__database.send_notification(message_obj.user_from, message_obj.user_to,
-                                                                   message_obj.id))
+            self.display_message(self.__database.send_banner(message_obj.user_from, message_obj.user_to,
+                                                             message_obj.id))
 
         if not list(self.__database.outgoing_notifications.queue):
             pass

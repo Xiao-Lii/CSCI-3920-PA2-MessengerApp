@@ -1,6 +1,4 @@
-{
-  "user_list": [{"_User__username": "user", "_User__password": "pw", "_User__email": "user"},
-                {"_User__username": "user2", "_User__password": "pw", "_User__email": "user2"}],
-  "message_list": [],
-  "notification_list": []
-}
+{"user_list": [{"_User__username": "admin", "_User__password": "pw", "_User__email": "admin"},
+  {"_User__username": "user", "_User__password": "pw", "_User__email": "user"},
+  {"_User__username": "user2", "_User__password": "pw", "_User__email": "user2"},
+  {"_User__username": "user3", "_User__password": "pw", "_User__email": "user3"}], "message_list": [], "notification_list": []}

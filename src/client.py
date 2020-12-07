@@ -42,7 +42,7 @@ class Client:
         # ------------------------- POSSIBLE THOUGHTS FOR CHANGES HERE -------------------------
         # THOUGHT ABOUT CHANGING THIS TO GENERATE A RANDOM NUMBER FOR PORT # BUT CAUSES ISSUES
         # ISSUES WITH FORMATTING AND KEEPING IT WITHIN A RANGE, ALSO NO GUARANTEE THAT ANOTHER APP
-        # IS ALREADY USING THE PORT #
+        # IS ALREADY USING THE PORT #, FOR NOW LET'S KEEP AS USER-INPUT PROMPT
         port = int(input("Please enter a unused port # for the server to connect to: "))
         # ------------------------- POSSIBLE THOUGHTS FOR CHANGES HERE -------------------------
 
@@ -53,7 +53,10 @@ class Client:
     def disconnect(self):
         self.send_message("QUIT|DISCONNECT")
         response = self.receive_message()
+
+        # Delimit received message by '|', should be 2 arguments
         arguments = response.split("|")
+
         if arguments[0] == "0":
             print(f"\n{arguments[0]}|{arguments[1]}")
         elif arguments[0] == "1":
@@ -87,6 +90,8 @@ class Client:
 
             self.send_message(f"LOGIN|{sign_in_username}|{sign_in_password}")
             response = self.receive_message()
+
+            # Delimit received message by '|', should be 2 arguments
             arguments = response.split("|")
 
             # If User & Password match from Server Database
@@ -115,6 +120,8 @@ class Client:
 
             self.send_message(f"ADD|{userInput_username}|{userInput_pw}|{userInput_email}")
             response = self.receive_message()
+
+            # Delimit received message by '|', should be 2 arguments
             arguments = response.split("|")
 
             if arguments[0] == "0":
@@ -133,6 +140,8 @@ class Client:
             message = input("Message: ")
             self.send_message(f"MSG|{self.sender_username}|{recipient_username}|{message}")
             response = self.receive_message()
+
+            # Delimit received message by '|', should be 2 arguments
             arguments = response.split("|")
 
             if arguments[0] == "0":
