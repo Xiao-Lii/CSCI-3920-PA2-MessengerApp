@@ -78,22 +78,23 @@ class BackgroundClientWorker(Thread):
         print(f"""[BGCW] {msg}""")
 
     def check_for_messages(self):
+        # Check if no list for messages exist
         if not list(self.__database.outgoing_messages.queue):
             pass
         elif list(self.__database.outgoing_messages.queue)[-1].user_to is self.__user:
-            message_obj = self.__database.outgoing_messages.get()
-            message = f"""R|{message_obj.user_from.username}|{message_obj.id}|{message_obj.content}"""
+            msg_info = self.__database.outgoing_messages.get()
+            message = f"""R|{msg_info.user_from.username}|{msg_info.id}|{msg_info.content}"""
 
             self.send_message(message)
             self.display_message(self.receive_message())
-            self.display_message(self.__database.send_banner(message_obj.user_from, message_obj.user_to,
-                                                             message_obj.id))
+            self.display_message(self.__database.send_banner(msg_info.user_from, msg_info.user_to,
+                                                             msg_info.id))
 
         if not list(self.__database.outgoing_notifications.queue):
             pass
         elif list(self.__database.outgoing_notifications.queue)[-1].user_from is self.__user:
-            message_obj = self.__database.outgoing_notifications.get()
-            message = f"""OK|{message_obj.user_from.username}|{message_obj.user_to.username}|{message_obj.content}"""
+            msg_info = self.__database.outgoing_notifications.get()
+            message = f"""OK|{msg_info.user_from.username}|{msg_info.user_to.username}|{msg_info.content}"""
             self.send_message(message)
             self.display_message(self.receive_message())
 
