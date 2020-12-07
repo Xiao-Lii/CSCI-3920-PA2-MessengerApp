@@ -5,8 +5,18 @@ A Client — Server multithreading system for a messaging system like Slack, MS 
 
 
 Users in the platform will have a username, password and display name. A user can send a direct message to another user by knowing his/her username. The messenger system will relay the message as soon as possible. However, if the message target user is not connected at that time, the message will be stored and the server will keep trying to relay the message. 
+### How to setup program configuration
+For Client:
 
+    ...\CSCI-3920-PA2-MessengerApp\src\Client.py
+    
+For Server:
+
+    ...\CSCI-3920-PA2-MessengerApp\src\Server.py
+    
 ### Notes about the program
+* Server can connect up to 30 ports
+
 * We don't have a phone number variable for sign up, instead we used display_name
     * Phone number was not used in any function based on the project details
         * On 2.2.1 #1a has the protocol USR|username|password|display_name, hence the reason we omit phone number and used display_name

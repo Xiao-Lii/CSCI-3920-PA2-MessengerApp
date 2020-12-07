@@ -1,6 +1,6 @@
 import socket
 import time
-from serverworker import ServerWorker
+from serverWorker import ServerWorker
 
 class Client:
     def __init__(self, ip: str = None, port: int = None):
