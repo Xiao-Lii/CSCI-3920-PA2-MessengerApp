@@ -1,8 +1,8 @@
 from threading import Thread
-from database import Database
-from user import User
+from Database import Database
+from User import User
 from bg_clientWorker import BackgroundClientWorker
-from message import Message
+from Message import Message
 import socket
 import json
 import queue

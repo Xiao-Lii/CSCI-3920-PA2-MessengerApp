@@ -1,8 +1,8 @@
 import socket
 import time
 from threading import Thread
-from database import Database
-from user import User
+from Database import Database
+from User import User
 
 
 class BackgroundClientWorker(Thread):

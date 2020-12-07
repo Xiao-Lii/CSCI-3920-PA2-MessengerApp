@@ -1,5 +1,5 @@
-from user import User
-from message import Message
+from User import User
+from Message import Message
 import queue
 
 
