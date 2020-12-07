@@ -2,6 +2,7 @@ import socket
 import time
 from serverWorker import ServerWorker
 
+
 class Client:
     def __init__(self, ip: str = None, port: int = None):
         self.__ip = ip
@@ -32,9 +33,8 @@ class Client:
     def sender_username(self):
         return self.__user_username
 
-
     def connect(self):
-        # Connect to the server
+        """ Connects to the server"""
         self.__client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__client_socket.connect((self.__ip, self.__port))
         self.__connected = True
@@ -63,6 +63,7 @@ class Client:
             print(arguments[1])
         try:
             self.__client_socket.close()
+
         # Error Handling - In case socket can't be closed
         except socket.error as se:
             print(f"0|{se}")
@@ -84,6 +85,8 @@ class Client:
             print("No new messages.")
 
     def login_user(self):
+        """User login - asks the user for username and password
+        this function will alert the user if he's signed in successfully, already logged in or doesn't have an account"""
         if self.__connected:
             sign_in_username = input("Username: ")
             sign_in_password = input("Password: ")
@@ -113,6 +116,7 @@ class Client:
             print("The client is not connected to a server!")
 
     def sign_up_user(self):
+        """signs up the user, asks for username, password and email"""
         if self.__connected:
             userInput_username = input("Input username: ")
             userInput_pw = input("Input password: ")
@@ -135,6 +139,8 @@ class Client:
             print("ERROR: Client not connected to server. Please connect before attempting to sign in.")
 
     def send_message_to_user(self):
+        """asks for receiver's username and the message the user want to send
+        will display a message if the receiver is on database or/and the message is sent"""
         if self.__connected and self.__signedIn:
             recipient_username = input("Recipient username: ")
             message = input("Message: ")
@@ -217,4 +223,3 @@ if __name__ == "__main__":
         # This will stop the server from crashing unexpectedly
         except ValueError:
             print("Error: Invalid Input - Data Type")
-

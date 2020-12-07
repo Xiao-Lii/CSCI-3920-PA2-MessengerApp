@@ -4,7 +4,7 @@ import queue
 
 
 class Database:
-    def __init__(self, users = None, sending_messages = None, sending_banners = None):
+    def __init__(self, users=None, sending_messages=None, sending_banners=None):
         # Initializing if no users exists
         if users is None:
             self.__users = []
@@ -43,10 +43,10 @@ class Database:
     def outgoing_notifications(self):
         return self.__sending_banners
 
-
     # NEED TO DOUBLE CHECK THIS PART, DATABASE IS ALLOWING 2 USERS TO SIGN UP WITH THE SAME EMAIL / USERNAME
     # ACTUALLY THIS PORTION MAY BE FIXED NOW - LEE
-    def sign_up_user(self, username:str, password:str, email:str):
+    def sign_up_user(self, username: str, password: str, email: str):
+        """checks if the username and email is not in database to prevent multiple same accounts"""
         check = True
         response = ""
 
@@ -69,7 +69,7 @@ class Database:
             print(user)
         return response
 
-    def send_message(self, name_from:str, name_to:str, message:str):
+    def send_message(self, name_from: str, name_to: str, message: str):
         sender_found = False
         recipient_found = False
         sending_user = None
@@ -101,7 +101,7 @@ class Database:
 
         return response
 
-    def send_banner(self, user_from:User, user_to:User, message_id:str):
+    def send_banner(self, user_from: User, user_to: User, message_id: str):
         check = 0
         response = ''
 

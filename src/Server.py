@@ -11,7 +11,8 @@ import time
 
 class Server(Thread):
     """Server - Our Main Thread for Starting the Messenger App"""
-    def __init__(self, ip:str, port:int, backlog:int):
+
+    def __init__(self, ip: str, port: int, backlog: int):
         super().__init__()
         self.__ip = ip
         self.__port = port
@@ -25,7 +26,6 @@ class Server(Thread):
         self.__connected_users = []
         self.__connection_count = 0
 
-
     @property
     def database(self):
         return self.__database
@@ -34,7 +34,7 @@ class Server(Thread):
     def list_of_connected_clients(self):
         return self.__list_of_connected_clients
 
-    def connected_users (self):
+    def connected_users(self):
         return self.__connected_users
 
     @property
@@ -42,9 +42,8 @@ class Server(Thread):
         return self.__keep_running
 
     @keep_running.setter
-    def keep_running(self, status:bool):
+    def keep_running(self, status: bool):
         self.__keep_running = status
-
 
     def terminate_server(self):
         self.__keep_running = False
@@ -73,6 +72,7 @@ class Server(Thread):
             cw.join()
 
     def load_from_file(self):
+        """loads .json file"""
         filename = input("Filename w/o file type extension (.json files only): ")
         try:
             with open(f"{filename}.json", "r") as database_file:
@@ -90,16 +90,15 @@ class Server(Thread):
 
         messages_queue = queue.Queue
         for message_in_queue in database_list["message_list"]:
-
             # Loading up Messages in Queue for Sender and Receivers
             sending_user_msgs = message_in_queue["_Message__user_from"]
             receiving_user_msgs = message_in_queue["_Message__user_to"]
 
             # Retrieving Sender and Receiver's Data
             sender = User(sending_user_msgs.get("_User__username"), sending_user_msgs.get("_User__password"),
-                             sending_user_msgs.get("_User__email"))
+                          sending_user_msgs.get("_User__email"))
             recipient = User(receiving_user_msgs.get("_User__username"), receiving_user_msgs.get("_User__password"),
-                           receiving_user_msgs.get("_User__email"))
+                             receiving_user_msgs.get("_User__email"))
 
             # Assembling Message to be sent with data collected
             message_to_put = Message(sender, recipient, message_in_queue.get("_Message__content"))
@@ -107,16 +106,15 @@ class Server(Thread):
 
         notification_queue = queue.Queue
         for notification_list in database_list["notification_list"]:
-
             # Loading up Notications for Messages in Queue for Sender and Receivers
             sending_user_msgs = notification_list["_Message__user_from"]
             receiving_user_msgs = notification_list["_Message__user_to"]
 
             # Retrieving Sender and Receiver's Data
             sender = User(sending_user_msgs.get("_User__username"), sending_user_msgs.get("_User__password"),
-                             sending_user_msgs.get("_User__email"))
+                          sending_user_msgs.get("_User__email"))
             recipient = User(receiving_user_msgs.get("_User__username"), receiving_user_msgs.get("_User__password"),
-                           receiving_user_msgs.get("_User__email"))
+                             receiving_user_msgs.get("_User__email"))
 
             # Assembling Notification Message to be sent with data collected
             message_to_put = Message(sender, recipient, notification_list.get("_Message__content"))
@@ -155,16 +153,18 @@ class Server(Thread):
             print(error)
 
     def display_menu(self):
-        service_menu =  "----- Server Main Menu -----\n" \
-                        "1. Load data from file.\n" \
-                        "2. Start the messenger service\n" \
-                        "3. Stop the messenger service\n" \
-                        "4. Save data to file\n" \
-                        "Please select an option: \n"
+        service_menu = "----- Server Main Menu -----\n" \
+                       "1. Load data from file.\n" \
+                       "2. Start the messenger service\n" \
+                       "3. Stop the messenger service\n" \
+                       "4. Save data to file\n" \
+                       "Please select an option: \n"
         return int(input(service_menu))
 
 
 """ClientWorker will listen for Client Requests"""
+
+
 class ClientWorker(Thread):
     def __init__(self, client_id: int, client_socket: socket, database: Database, server: Server):
         super().__init__()
@@ -176,13 +176,12 @@ class ClientWorker(Thread):
         self.__keep_clientRunning = True
         self.__user = None
 
-
     @property
     def id(self):
         return self.__id
 
     @id.setter
-    def id(self, client_id:int):
+    def id(self, client_id: int):
         self.__id = client_id
 
     @property
@@ -237,7 +236,7 @@ class ClientWorker(Thread):
 
         return "0|OK"
 
-    def send_message(self, msg:str):
+    def send_message(self, msg: str):
         self.display_message(f"""[SRV] >> {msg}""")
         self.__client_socket.send(msg.encode("UTF-8"))
 
@@ -246,10 +245,10 @@ class ClientWorker(Thread):
         print(f"""[RECV] {msg}""")
         return msg
 
-    def display_message(self, msg:str):
+    def display_message(self, msg: str):
         print(f"""[CW] {msg}""")
 
-    def sign_in_user(self, username:str, password:str):
+    def sign_in_user(self, username: str, password: str):
         user: User
         signed_in = False
         cw: ClientWorker
@@ -352,4 +351,3 @@ if __name__ == "__main__":
             server.save_to_file()
         else:
             print("Invalid option, try again \n\n")
-
