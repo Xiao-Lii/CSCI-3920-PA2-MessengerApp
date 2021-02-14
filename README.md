@@ -1,4 +1,4 @@
-## CSCI 3920 - Advanced Programming w/ Python: PA2 Messenger App
+## Advanced Programming w/ Python: PA2 Messenger App
 
 ### Summary
 A Client — Server multithreading system for a messaging system like Slack, MS Teams, etc. The system will consist of two applications: the messenger system and a messaging client. The messenger system will run a server to maintain users and relay messages between the users. The messaging client connects to the messenger system, sign in the user and allow to send and receive messages. 
